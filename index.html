@@ -185,27 +185,146 @@
   .sec-head h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
   .sec-head .sub { color: var(--muted); font-size: 13px; }
 
-  /* ───── Fotos recuperación ───── */
-  .recuperacion-grid {
-    display: grid; gap: 12px;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  /* ───── Paola en recuperación (galería colapsable) ───── */
+  .gallery-card {
+    padding: 0;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(236,72,153,.06), transparent 70%), var(--card);
+    border-color: rgba(236,72,153,.2);
   }
-  .recuperacion-item {
+  .gallery-details > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 18px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    user-select: none;
+    transition: background .2s;
+  }
+  .gallery-details > summary::-webkit-details-marker { display: none; }
+  .gallery-details > summary:hover { background: rgba(236,72,153,.05); }
+  .gallery-summary-label {
+    display: inline-flex; align-items: center; gap: 14px;
+    min-width: 0;
+  }
+  .gallery-emoji {
+    width: 42px; height: 42px;
+    display: grid; place-items: center;
+    border-radius: 12px;
+    background: var(--gradient);
+    font-size: 20px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px -4px rgba(236,72,153,.5);
+  }
+  .gallery-title {
     display: block;
-    aspect-ratio: 4/5;
-    border-radius: 16px;
+    font-weight: 800; font-size: 17px;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .gallery-subtitle {
+    display: block;
+    color: var(--muted); font-size: 13px; font-weight: 500;
+    margin-top: 2px;
+  }
+  .gallery-details > summary .summary-chevron {
+    color: var(--muted);
+    transition: transform .25s ease;
+    flex-shrink: 0;
+  }
+  .gallery-details[open] > summary .summary-chevron { transform: rotate(180deg); }
+
+  .gallery-body {
+    padding: 4px 20px 22px;
+    border-top: 1px solid var(--border);
+    animation: galleryFade .35s ease;
+  }
+  @keyframes galleryFade {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .gallery-intro {
+    margin: 16px 0 6px;
+    padding: 14px 16px;
+    background: rgba(124,58,237,.05);
+    border-left: 3px solid var(--brand);
+    border-radius: 10px;
+    font-size: 14px; line-height: 1.6;
+    color: var(--text);
+  }
+  .gallery-intro strong { color: var(--brand); }
+  .gallery-heading {
+    margin: 22px 0 10px;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .gallery-note {
+    margin: -4px 0 12px;
+    font-size: 13px; color: var(--muted);
+    font-style: italic;
+  }
+  .gallery-grid {
+    display: grid; gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  .gallery-item {
+    position: relative;
+    display: block;
+    aspect-ratio: 3/4;
+    border-radius: 14px;
     overflow: hidden;
     border: 1px solid var(--border);
     background: var(--bg-soft);
     transition: transform .18s, box-shadow .2s, border-color .2s;
   }
-  .recuperacion-item:hover {
+  .gallery-item:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
-    border-color: var(--border-strong);
+    box-shadow: 0 8px 20px -8px rgba(124,58,237,.35);
+    border-color: var(--brand);
   }
-  .recuperacion-item img {
+  .gallery-item img {
     width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .gallery-item-final {
+    border: 2px solid transparent;
+    background: var(--gradient) border-box;
+    position: relative;
+  }
+  .gallery-item-final::before {
+    content: ""; position: absolute; inset: 2px;
+    border-radius: 12px; background: var(--card);
+    z-index: 0;
+  }
+  .gallery-item-final img {
+    position: relative; z-index: 1;
+    border-radius: 12px;
+  }
+  .gallery-tag {
+    position: absolute; left: 8px; right: 8px; bottom: 8px;
+    z-index: 2;
+    padding: 6px 10px;
+    background: rgba(0,0,0,.72);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 12px; font-weight: 700;
+    text-align: center;
+    backdrop-filter: blur(4px);
+  }
+
+  @media (max-width: 640px) {
+    .gallery-details > summary { padding: 14px 16px; }
+    .gallery-emoji { width: 38px; height: 38px; font-size: 18px; }
+    .gallery-title { font-size: 15px; }
+    .gallery-subtitle { font-size: 12px; }
+    .gallery-body { padding: 4px 16px 18px; }
+    .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .gallery-intro { padding: 12px 14px; font-size: 13px; }
+    .gallery-heading { font-size: 14px; margin: 18px 0 8px; }
+    .gallery-tag { font-size: 11px; padding: 5px 8px; }
+  }
+  @media (max-width: 380px) {
+    .gallery-grid { grid-template-columns: 1fr; }
   }
 
   /* ───── Premios ───── */
@@ -560,6 +679,55 @@
     </div>
   </div>
 
+  <!-- Paola en recuperación (colapsable) -->
+  <section class="card gallery-card">
+    <details class="gallery-details">
+      <summary>
+        <span class="gallery-summary-label">
+          <span class="gallery-emoji">💜</span>
+          <span>
+            <span class="gallery-title">Paola en recuperación</span>
+            <span class="gallery-subtitle">Mira cómo ha ido avanzando — del primer día hasta hoy</span>
+          </span>
+        </span>
+        <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+
+      <div class="gallery-body">
+        <p class="gallery-intro">
+          Cada foto es un pasito más en su recuperación. Desde esos primeros días difíciles
+          hasta volver a pintarse los labios con una sonrisa: <strong>Paola es pura fuerza</strong>.
+          Gracias por acompañarla con cariño. 💫
+        </p>
+
+        <h3 class="gallery-heading">🌷 Su camino de recuperación</h3>
+        <div class="gallery-grid">
+          <a href="paola-rec-01.jpg" target="_blank" rel="noopener" class="gallery-item"><img src="paola-rec-01.jpg" alt="Paola en recuperación — día 1" loading="lazy"></a>
+          <a href="paola-rec-02.jpg" target="_blank" rel="noopener" class="gallery-item"><img src="paola-rec-02.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-03.jpg" target="_blank" rel="noopener" class="gallery-item"><img src="paola-rec-03.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-04.jpg" target="_blank" rel="noopener" class="gallery-item"><img src="paola-rec-04.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-05.jpg" target="_blank" rel="noopener" class="gallery-item"><img src="paola-rec-05.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-06.jpg" target="_blank" rel="noopener" class="gallery-item"><img src="paola-rec-06.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-07.jpg" target="_blank" rel="noopener" class="gallery-item"><img src="paola-rec-07.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-08.jpg" target="_blank" rel="noopener" class="gallery-item"><img src="paola-rec-08.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-09.jpg" target="_blank" rel="noopener" class="gallery-item"><img src="paola-rec-09.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-10.jpg" target="_blank" rel="noopener" class="gallery-item gallery-item-final">
+            <img src="paola-rec-10.jpg" alt="Paola con labios pintados — recuperación" loading="lazy">
+            <span class="gallery-tag">💄 ¡Con los labios listos!</span>
+          </a>
+        </div>
+
+        <h3 class="gallery-heading">👨‍👩‍👧‍👦 La familia acompañándola</h3>
+        <p class="gallery-note">Constanza, Denny, José y Anto — el amor que la sostiene cada día.</p>
+        <div class="gallery-grid">
+          <a href="paola-fam-01.jpg" target="_blank" rel="noopener" class="gallery-item"><img src="paola-fam-01.jpg" alt="Familia con Paola" loading="lazy"></a>
+          <a href="paola-fam-02.jpg" target="_blank" rel="noopener" class="gallery-item"><img src="paola-fam-02.jpg" alt="Familia con Paola" loading="lazy"></a>
+          <a href="paola-fam-03.jpg" target="_blank" rel="noopener" class="gallery-item"><img src="paola-fam-03.jpg" alt="Familia con Paola" loading="lazy"></a>
+        </div>
+      </div>
+    </details>
+  </section>
+
   <!-- Cómo participar / Transferencia -->
   <section class="card transfer-card">
     <div class="sec-head">
@@ -609,24 +777,6 @@
         </a>
       </div>
       <p class="transfer-note">Cada número cuesta <strong>$1.000</strong>. Después de transferir, envía el comprobante por email indicando tu <strong>nombre</strong> y el <strong>número que elegiste</strong>. Paola lo marcará como pagado en la lista.</p>
-    </div>
-  </section>
-
-  <!-- Fotos de la recuperación -->
-  <section class="card">
-    <div class="sec-head">
-      <div>
-        <h2>📸 Fotos de la recuperación</h2>
-        <div class="sub">Momentos del proceso — ¡gracias por acompañarla! 💜</div>
-      </div>
-    </div>
-    <div class="recuperacion-grid">
-      <a href="recuperacion-1.jpg" target="_blank" rel="noopener" class="recuperacion-item">
-        <img src="recuperacion-1.jpg" alt="Foto de la recuperación de Paola" loading="lazy">
-      </a>
-      <a href="recuperacion-2.jpg" target="_blank" rel="noopener" class="recuperacion-item">
-        <img src="recuperacion-2.jpg" alt="Foto de la recuperación de Paola" loading="lazy">
-      </a>
     </div>
   </section>
 
