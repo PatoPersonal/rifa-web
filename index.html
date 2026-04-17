@@ -110,13 +110,30 @@
   }
   .hero-inner {
     position: relative; z-index: 1;
-    display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center;
+    display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center;
   }
-  .hero h1 {
+  .hero-copy h1 {
     margin: 0 0 6px; font-size: clamp(28px, 4vw, 40px);
     letter-spacing: -0.02em; font-weight: 800;
   }
-  .hero p { margin: 0; opacity: .92; font-size: 16px; max-width: 44ch; }
+  .hero-copy p { margin: 0; opacity: .92; font-size: 16px; max-width: 44ch; }
+  .hero-photo-wrap {
+    position: relative;
+    width: 240px; aspect-ratio: 4/5;
+    border-radius: 20px; overflow: hidden;
+    border: 3px solid rgba(255,255,255,.55);
+    box-shadow: 0 18px 40px -14px rgba(0,0,0,.5);
+    background: rgba(0,0,0,.1);
+  }
+  .hero-photo {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .hero-photo-name {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 30px 14px 12px;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,.7));
+    color: #fff; font-weight: 700; font-size: 16px; letter-spacing: -.01em;
+  }
   .hero-chips { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
   .chip {
     display: inline-flex; align-items: center; gap: 6px;
@@ -131,22 +148,28 @@
   }
   @keyframes pulse { 50% { box-shadow: 0 0 0 10px rgba(74,222,128,0); } }
 
-  /* Progress ring */
-  .ring-wrap { position: relative; width: 140px; height: 140px; }
+  /* Progress ring (now inside Numbers section) */
+  .ring-wrap { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
   .ring-wrap svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-  .ring-bg { stroke: rgba(255,255,255,.25); }
-  .ring-fg { stroke: #fff; transition: stroke-dashoffset .8s ease; }
+  .ring-bg { stroke: var(--border); }
+  .ring-fg { stroke: url(#ringGrad); transition: stroke-dashoffset .8s ease; }
   .ring-label {
     position: absolute; inset: 0;
     display: flex; flex-direction: column; justify-content: center; align-items: center;
     text-align: center;
   }
-  .ring-label .big { font-size: 28px; font-weight: 800; line-height: 1; }
-  .ring-label .small { font-size: 12px; opacity: .85; margin-top: 4px; font-weight: 600; }
+  .ring-label .big { font-size: 22px; font-weight: 800; line-height: 1; color: var(--text); }
+  .ring-label .small { font-size: 11px; opacity: .8; margin-top: 3px; font-weight: 600; color: var(--muted); }
+
+  .numeros-head {
+    display: flex; align-items: center; gap: 18px;
+    padding: 4px 0 16px; flex-wrap: wrap;
+  }
+  .numeros-head > .stats { flex: 1; margin-bottom: 0; }
 
   @media (max-width: 640px) {
     .hero-inner { grid-template-columns: 1fr; }
-    .ring-wrap { width: 120px; height: 120px; margin: 0 auto; }
+    .hero-photo-wrap { width: 100%; max-width: 320px; margin: 0 auto; aspect-ratio: 4/5; }
   }
 
   /* ───── Sections ───── */
@@ -161,6 +184,29 @@
   .sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
   .sec-head h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
   .sec-head .sub { color: var(--muted); font-size: 13px; }
+
+  /* ───── Fotos recuperación ───── */
+  .recuperacion-grid {
+    display: grid; gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+  .recuperacion-item {
+    display: block;
+    aspect-ratio: 4/5;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--bg-soft);
+    transition: transform .18s, box-shadow .2s, border-color .2s;
+  }
+  .recuperacion-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--border-strong);
+  }
+  .recuperacion-item img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
 
   /* ───── Premios ───── */
   .premios-grid {
@@ -242,7 +288,38 @@
   }
   .segment button.active { background: var(--card); color: var(--text); box-shadow: var(--shadow-sm); }
 
-  /* ───── Visual number grid ───── */
+  /* ───── Rifas (talonarios) blocks ───── */
+  .rifas-grid {
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    margin-bottom: 18px;
+  }
+  .rifa-block {
+    padding: 14px; border-radius: 14px;
+    background: var(--bg-soft); border: 1px solid var(--border);
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .rifa-block:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+  .rifa-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed var(--border);
+  }
+  .rifa-title {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-weight: 800; font-size: 14px; letter-spacing: -.01em;
+  }
+  .rifa-title .pill {
+    display: inline-grid; place-items: center;
+    min-width: 24px; height: 24px; padding: 0 8px;
+    background: var(--gradient); color: #fff;
+    border-radius: 999px; font-size: 12px; font-weight: 800;
+  }
+  .rifa-meta { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .rifa-cells {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+  }
+
+  /* ───── Legacy visual number grid (fallback) ───── */
   .num-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
@@ -312,6 +389,119 @@
     font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
   }
 
+  /* Transfer card */
+  .transfer-card { background: linear-gradient(180deg, rgba(124,58,237,.05), transparent 60%), var(--card); }
+  .transfer { display: grid; gap: 18px; }
+
+  /* Collapsible account info */
+  .transfer-details {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg-soft);
+    overflow: hidden;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .transfer-details[open] { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+  .transfer-details > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    user-select: none;
+  }
+  .transfer-details > summary::-webkit-details-marker { display: none; }
+  .transfer-details > summary .summary-label {
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .transfer-details > summary .summary-chevron {
+    color: var(--muted);
+    transition: transform .2s ease;
+  }
+  .transfer-details[open] > summary .summary-chevron { transform: rotate(180deg); }
+  .transfer-details > summary:hover { color: var(--brand); }
+  .transfer-details .transfer-data {
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--card);
+  }
+  .transfer-top {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .transfer-org { display: flex; align-items: center; gap: 14px; }
+  .price-badge {
+    display: inline-flex; flex-direction: column; align-items: center;
+    padding: 10px 18px; border-radius: 14px;
+    background: var(--gradient); color: #fff;
+    box-shadow: 0 8px 20px -8px rgba(124,58,237,.6);
+    min-width: 120px;
+  }
+  .price-label { font-size: 11px; opacity: .9; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  .price-value { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+  .avatar {
+    width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
+    border: 3px solid transparent; background: var(--gradient);
+    box-shadow: 0 6px 18px -6px rgba(124,58,237,.45);
+    padding: 3px;
+    flex-shrink: 0;
+  }
+  .org-name { font-weight: 800; font-size: 18px; letter-spacing: -0.01em; }
+  .org-role { color: var(--muted); font-size: 13px; }
+  .transfer-data {
+    list-style: none; padding: 0; margin: 0;
+    display: grid; gap: 2px;
+    border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+    background: var(--bg-soft);
+  }
+  .transfer-data li {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .transfer-data li:last-child { border-bottom: none; }
+  .transfer-data li span { color: var(--muted); font-size: 13px; font-weight: 500; }
+  .transfer-data li strong {
+    font-weight: 700; font-variant-numeric: tabular-nums;
+    text-align: right; font-size: 15px;
+    word-break: break-all;
+  }
+  .transfer-data li strong[data-copy] { cursor: pointer; border-bottom: 1px dashed var(--border-strong); }
+  .transfer-data li strong[data-copy]:hover { color: var(--brand); }
+  .transfer-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn-primary, .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 18px; border-radius: 12px; font-weight: 700; font-size: 14px;
+    border: none; cursor: pointer; font-family: inherit;
+    transition: transform .15s, box-shadow .2s, opacity .2s;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--gradient); color: #fff;
+    box-shadow: 0 8px 20px -8px rgba(124,58,237,.6);
+  }
+  .btn-primary:hover { transform: translateY(-1px); }
+  .btn-primary svg { width: 16px; height: 16px; }
+  .btn-secondary {
+    background: var(--card); color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--brand); color: var(--brand); }
+  .btn-secondary svg { width: 16px; height: 16px; }
+  .transfer-note {
+    margin: 0; padding: 12px 14px;
+    background: rgba(245,158,11,.08); border-left: 3px solid var(--brand-3);
+    border-radius: 8px; font-size: 13px; color: var(--muted); line-height: 1.6;
+  }
+  .transfer-note strong { color: var(--text); }
+  @media (max-width: 480px) {
+    .transfer-data li { flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 14px; }
+    .transfer-data li strong { text-align: left; }
+  }
+
   /* Toast */
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -325,8 +515,9 @@
   @media (max-width: 500px) {
     .container { padding: 16px 12px 48px; }
     .hero { padding: 24px 20px; }
-    th:nth-child(3), td:nth-child(3) { display: none; }
+    th:nth-child(4), td:nth-child(4) { display: none; }
     .num-grid { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px; }
+    .rifas-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -353,7 +544,11 @@
   <!-- Hero -->
   <div class="hero">
     <div class="hero-inner">
-      <div>
+      <div class="hero-photo-wrap">
+        <img src="paola.jpg" alt="Paola Soto" class="hero-photo" loading="eager">
+        <div class="hero-photo-name">Paola Soto</div>
+      </div>
+      <div class="hero-copy">
         <h1 id="titulo">Gran Rifa</h1>
         <p id="subtitulo">Números pagados, premios y toda la info del sorteo — actualizado en vivo.</p>
         <div class="hero-chips">
@@ -362,18 +557,78 @@
           <span class="chip" id="chip-date">—</span>
         </div>
       </div>
-      <div class="ring-wrap">
-        <svg viewBox="0 0 120 120" aria-hidden="true">
-          <circle class="ring-bg" cx="60" cy="60" r="52" fill="none" stroke-width="10"/>
-          <circle id="ring" class="ring-fg" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
-        </svg>
-        <div class="ring-label">
-          <div class="big" id="ring-pct">0%</div>
-          <div class="small" id="ring-sub">vendidos</div>
-        </div>
-      </div>
     </div>
   </div>
+
+  <!-- Cómo participar / Transferencia -->
+  <section class="card transfer-card">
+    <div class="sec-head">
+      <div>
+        <h2>💳 Cómo participar</h2>
+        <div class="sub">Transfiere, envía el comprobante y ¡listo!</div>
+      </div>
+    </div>
+    <div class="transfer">
+      <div class="transfer-top">
+        <div class="transfer-org">
+          <div>
+            <div class="org-name">Paola Soto</div>
+            <div class="org-role">Organizan: Constanza, Denny, José y Anto — sus hija/os que la aman ❤️</div>
+          </div>
+        </div>
+        <div class="price-badge">
+          <span class="price-label">Valor por número</span>
+          <span class="price-value">$1.000</span>
+        </div>
+      </div>
+      <details class="transfer-details">
+        <summary>
+          <span class="summary-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+            Ver datos de la cuenta
+          </span>
+          <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <ul class="transfer-data">
+          <li><span>Banco</span><strong>BancoEstado</strong></li>
+          <li><span>Tipo de cuenta</span><strong>CuentaRUT</strong></li>
+          <li><span>Nº de cuenta</span><strong data-copy="14279967">14.279.967</strong></li>
+          <li><span>RUT</span><strong data-copy="14279967-7">14.279.967-7</strong></li>
+          <li><span>Nombre</span><strong>Paola Soto</strong></li>
+          <li><span>Email</span><strong data-copy="Denisse.psoto89@gmail.com">Denisse.psoto89@gmail.com</strong></li>
+        </ul>
+      </details>
+      <div class="transfer-actions">
+        <button class="btn-primary" id="copy-all">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          Copiar datos de transferencia
+        </button>
+        <a class="btn-secondary" href="mailto:Denisse.psoto89@gmail.com?subject=Comprobante%20rifa&body=Hola%20Paola%2C%20adjunto%20el%20comprobante%20de%20mi%20transferencia.%0A%0ANombre%3A%20%0AN%C3%BAmero(s)%20elegido(s)%3A%20%0A">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          Enviar comprobante
+        </a>
+      </div>
+      <p class="transfer-note">Cada número cuesta <strong>$1.000</strong>. Después de transferir, envía el comprobante por email indicando tu <strong>nombre</strong> y el <strong>número que elegiste</strong>. Paola lo marcará como pagado en la lista.</p>
+    </div>
+  </section>
+
+  <!-- Fotos de la recuperación -->
+  <section class="card">
+    <div class="sec-head">
+      <div>
+        <h2>📸 Fotos de la recuperación</h2>
+        <div class="sub">Momentos del proceso — ¡gracias por acompañarla! 💜</div>
+      </div>
+    </div>
+    <div class="recuperacion-grid">
+      <a href="recuperacion-1.jpg" target="_blank" rel="noopener" class="recuperacion-item">
+        <img src="recuperacion-1.jpg" alt="Foto de la recuperación de Paola" loading="lazy">
+      </a>
+      <a href="recuperacion-2.jpg" target="_blank" rel="noopener" class="recuperacion-item">
+        <img src="recuperacion-2.jpg" alt="Foto de la recuperación de Paola" loading="lazy">
+      </a>
+    </div>
+  </section>
 
   <!-- Premios -->
   <section class="card">
@@ -397,7 +652,26 @@
       </div>
     </div>
 
-    <div class="stats" id="stats"></div>
+    <div class="numeros-head">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <defs>
+            <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#7c3aed"/>
+              <stop offset="55%" stop-color="#ec4899"/>
+              <stop offset="100%" stop-color="#f59e0b"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="60" cy="60" r="52" fill="none" stroke-width="10"/>
+          <circle id="ring" class="ring-fg" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+        </svg>
+        <div class="ring-label">
+          <div class="big" id="ring-pct">0%</div>
+          <div class="small" id="ring-sub">vendidos</div>
+        </div>
+      </div>
+      <div class="stats" id="stats"></div>
+    </div>
 
     <div class="controls">
       <div class="search">
@@ -405,7 +679,7 @@
         <input type="text" id="search" placeholder="Buscar por número o comprador…" autocomplete="off">
       </div>
       <div class="segment" id="view-toggle">
-        <button data-view="grid" class="active">🗂 Grilla</button>
+        <button data-view="grid" class="active">🗂 Talonarios</button>
         <button data-view="table">📋 Tabla</button>
       </div>
     </div>
@@ -465,12 +739,13 @@ const CONFIG = {
   numerosSheet: "Numeros",
   premiosSheet: "Premios",
 
-  // Total de números en la rifa (para calcular % y mostrar números libres)
-  // Si tu sheet ya lista TODOS los números (pagados y no), deja en 0 y se deduce.
-  totalNumeros: 100,
+  // Estructura en bloques: 7 rifas (talonarios) × 15 números cada uno = 105
+  rifasCount: 7,
+  numerosPorRifa: 15,
 
-  // Contraseña para abrir /?admin=XXX (cámbiala antes de subir a Vercel)
-  adminKey: "rifa2026",
+  // Hash SHA-256 de la clave admin (la clave real NUNCA va aquí en texto plano).
+  // Para cambiarla: node -e "console.log(require('crypto').createHash('sha256').update('TU_CLAVE').digest('hex'))"
+  adminKeyHash: "609b54cac6d4d1a541446402a4f244100b5244ff0065d17c7bcb6000437def79",
 
   // Refresco automático (ms). 0 para desactivar.
   autoRefreshMs: 60000,
@@ -567,14 +842,41 @@ let lastNumeros = [];
 function renderNumeros(list) {
   lastNumeros = list;
 
-  const byStatus = { paid: [], reserved: [], free: [] };
-  list.forEach(n => byStatus[classify(n.pagado || n.estado || n.status)].push(n));
+  const R = Math.max(1, Number(CONFIG.rifasCount) || 7);
+  const N = Math.max(1, Number(CONFIG.numerosPorRifa) || 15);
+  const total = R * N;
 
-  const paidCount = byStatus.paid.length;
-  const reservedCount = byStatus.reserved.length;
-  const total = CONFIG.totalNumeros > 0 ? CONFIG.totalNumeros : list.length;
+  // Normaliza cada fila a { rifa, local, comprador, status }
+  function normalize(n) {
+    const raw = Number((n.numero || n.número || "").toString().replace(/\D/g, ""));
+    let rifa = Number((n.rifa || "").toString().replace(/\D/g, ""));
+    let local = raw;
+    if (!rifa && raw > 0) {
+      rifa = Math.ceil(raw / N);
+      local = ((raw - 1) % N) + 1;
+    } else if (rifa && raw > N) {
+      // fallback: si alguien puso número global también
+      local = ((raw - 1) % N) + 1;
+    }
+    return {
+      rifa, local,
+      comprador: n.comprador || n.nombre || "",
+      fecha: n.fecha || "",
+      status: classify(n.pagado || n.estado || n.status),
+      raw: n,
+    };
+  }
+  const rows = list.map(normalize).filter(r => r.rifa > 0 && r.rifa <= R && r.local > 0 && r.local <= N);
+
+  // Mapa (rifa, local) → row
+  const key = (r, l) => `${r}-${l}`;
+  const map = new Map();
+  rows.forEach(r => map.set(key(r.rifa, r.local), r));
+
+  const paidCount = rows.filter(r => r.status === "paid").length;
+  const reservedCount = rows.filter(r => r.status === "reserved").length;
   const freeCount = Math.max(0, total - paidCount - reservedCount);
-  const pct = total ? Math.round((paidCount / total) * 100) : 0;
+  const pct = Math.round((paidCount / total) * 100);
 
   // Hero chips + ring
   document.getElementById("chip-paid").textContent = `${paidCount} pagado${paidCount === 1 ? "" : "s"}`;
@@ -583,7 +885,7 @@ function renderNumeros(list) {
   const ring = document.getElementById("ring");
   const C = 2 * Math.PI * 52;
   ring.setAttribute("stroke-dasharray", C.toFixed(1));
-  ring.setAttribute("stroke-dashoffset", (C * (1 - paidCount / Math.max(total, 1))).toFixed(1));
+  ring.setAttribute("stroke-dashoffset", (C * (1 - paidCount / total)).toFixed(1));
 
   // Stats
   document.getElementById("stats").innerHTML = `
@@ -591,75 +893,90 @@ function renderNumeros(list) {
       <div class="progress-bar"><span style="width:${pct}%"></span></div></div>
     <div class="stat"><div class="stat-num">${reservedCount}</div><div class="stat-label">Reservados</div></div>
     <div class="stat"><div class="stat-num">${freeCount}</div><div class="stat-label">Libres</div></div>
-    <div class="stat"><div class="stat-num">${total}</div><div class="stat-label">Total</div></div>
+    <div class="stat"><div class="stat-num">${R} × ${N}</div><div class="stat-label">Talonarios</div></div>
   `;
-
-  // Build full number map
-  const map = new Map();
-  list.forEach(n => {
-    const num = Number((n.numero || n.número || "").toString().replace(/\D/g, ""));
-    if (Number.isFinite(num) && num > 0) map.set(num, { ...n, _num: num, _status: classify(n.pagado || n.estado || n.status) });
-  });
 
   const isAdmin = document.body.classList.contains("is-admin");
 
-  // Grilla visual
-  const maxN = CONFIG.totalNumeros > 0 ? CONFIG.totalNumeros : Math.max(...[...map.keys(), 0]);
-  const gridCells = [];
-  for (let i = 1; i <= maxN; i++) {
-    const rec = map.get(i);
-    const status = rec ? rec._status : "free";
-    const comprador = rec?.comprador || rec?.nombre || "";
-    const tip = status === "paid"
-      ? `N° ${i} — ${comprador || "pagado"}`
-      : status === "reserved"
-        ? `N° ${i} — reservado${comprador ? " · " + comprador : ""}`
-        : `N° ${i} — libre`;
-    const pad = String(i).padStart(String(maxN).length, "0");
-    gridCells.push(`<div class="num-cell ${status}" data-num="${i}" data-search="${esc((i + " " + comprador).toLowerCase())}" title="${esc(tip)}">${pad}</div>`);
+  // Render de bloques (talonarios)
+  const blocks = [];
+  for (let r = 1; r <= R; r++) {
+    const cells = [];
+    let blockPaid = 0;
+    for (let i = 1; i <= N; i++) {
+      const rec = map.get(key(r, i));
+      const status = rec ? rec.status : "free";
+      if (status === "paid") blockPaid++;
+      const comprador = rec?.comprador || "";
+      const pad = String(i).padStart(String(N).length, "0");
+      const tip = status === "paid"
+        ? `Rifa ${r} · N° ${pad} — ${comprador || "pagado"}`
+        : status === "reserved"
+          ? `Rifa ${r} · N° ${pad} — reservado${comprador ? " · " + comprador : ""}`
+          : `Rifa ${r} · N° ${pad} — libre`;
+      cells.push(`<div class="num-cell ${status}" data-search="${esc((r + "-" + i + " " + i + " " + comprador).toLowerCase())}" title="${esc(tip)}">${pad}</div>`);
+    }
+    blocks.push(`
+      <div class="rifa-block" data-rifa="${r}">
+        <div class="rifa-head">
+          <div class="rifa-title"><span class="pill">${r}</span> Talonario</div>
+          <div class="rifa-meta">${blockPaid}/${N} pagados</div>
+        </div>
+        <div class="rifa-cells">${cells.join("")}</div>
+      </div>`);
   }
-  document.getElementById("grid-view").innerHTML = `<div class="num-grid" id="num-grid">${gridCells.join("")}</div>`;
+  document.getElementById("grid-view").innerHTML = `<div class="rifas-grid">${blocks.join("")}</div>`;
 
   // Tabla detalle (solo pagados + reservados — o todos si admin)
-  const visible = [...(isAdmin ? [...byStatus.paid, ...byStatus.reserved, ...byStatus.free]
-                               : [...byStatus.paid, ...byStatus.reserved])]
-    .sort((a, b) => Number(a.numero || 0) - Number(b.numero || 0));
+  const visible = rows
+    .filter(r => isAdmin || r.status !== "free")
+    .sort((a, b) => a.rifa - b.rifa || a.local - b.local);
 
   if (!visible.length) {
     document.getElementById("table-view").innerHTML = `<div class="state"><span class="emoji">🕒</span>Aún no hay números pagados.</div>`;
   } else {
-    const rows = visible.map(n => {
-      const status = classify(n.pagado || n.estado || n.status);
-      const cls = status === "paid" ? "" : "pending";
-      const etiq = status === "paid" ? "Pagado" : status === "reserved" ? "Reservado" : "Libre";
+    const trs = visible.map(r => {
+      const cls = r.status === "paid" ? "" : "pending";
+      const etiq = r.status === "paid" ? "Pagado" : r.status === "reserved" ? "Reservado" : "Libre";
+      const pad = String(r.local).padStart(String(N).length, "0");
+      const primerNombre = (r.comprador || "").trim().split(/\s+/)[0] || "";
       return `
-        <tr data-search="${esc(((n.numero || "") + " " + (n.comprador || n.nombre || "")).toLowerCase())}" data-status="${status}">
-          <td><span class="num-badge ${cls}">${esc(n.numero || "")}</span></td>
-          <td>${esc(n.comprador || n.nombre || "—")}</td>
-          <td>${esc(n.fecha || "")}</td>
+        <tr data-search="${esc(((r.rifa + "-" + r.local + " " + r.local + " " + r.comprador)).toLowerCase())}" data-status="${r.status}">
+          <td><strong>${r.rifa}</strong></td>
+          <td><span class="num-badge ${cls}">${pad}</span></td>
+          <td>${esc(primerNombre || "—")}</td>
+          <td>${esc(r.fecha)}</td>
           <td>${etiq}</td>
         </tr>`;
     }).join("");
     document.getElementById("table-view").innerHTML = `
       <div class="table-wrap"><table>
-        <thead><tr><th>Número</th><th>Comprador</th><th>Fecha</th><th>Estado</th></tr></thead>
-        <tbody id="tbody">${rows}</tbody>
+        <thead><tr><th>Rifa</th><th>Número</th><th>Comprador</th><th>Fecha</th><th>Estado</th></tr></thead>
+        <tbody id="tbody">${trs}</tbody>
       </table></div>`;
   }
 
   // Admin panel
   if (isAdmin) {
+    const recaudado = paidCount * 1000;
     document.getElementById("admin-stats").innerHTML = `
       <div class="stat"><div class="stat-num">${paidCount}</div><div class="stat-label">Pagados</div></div>
       <div class="stat"><div class="stat-num">${reservedCount}</div><div class="stat-label">Reservados</div></div>
       <div class="stat"><div class="stat-num">${freeCount}</div><div class="stat-label">Libres</div></div>
-      <div class="stat"><div class="stat-num">$${(paidCount * 0).toLocaleString("es-CL")}</div><div class="stat-label">Total recaudado</div></div>
+      <div class="stat"><div class="stat-num">$${recaudado.toLocaleString("es-CL")}</div><div class="stat-label">Recaudado</div></div>
     `;
-    const libres = [];
-    for (let i = 1; i <= maxN; i++) if (!map.has(i) || map.get(i)._status === "free") libres.push(i);
-    const chunked = libres.map(n => String(n).padStart(String(maxN).length, "0")).join(", ");
-    document.getElementById("admin-libres").innerHTML = libres.length
-      ? `<div style="padding:14px;background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;font-size:14px;line-height:1.8;word-break:break-word;"><strong>${libres.length} libres:</strong> ${esc(chunked)}</div>`
+    // Libres agrupados por rifa
+    const libresPorRifa = [];
+    for (let r = 1; r <= R; r++) {
+      const libres = [];
+      for (let i = 1; i <= N; i++) {
+        const rec = map.get(key(r, i));
+        if (!rec || rec.status === "free") libres.push(String(i).padStart(String(N).length, "0"));
+      }
+      if (libres.length) libresPorRifa.push(`<div style="margin-bottom:8px;"><strong>Rifa ${r}:</strong> ${libres.join(", ")}</div>`);
+    }
+    document.getElementById("admin-libres").innerHTML = libresPorRifa.length
+      ? `<div style="padding:14px;background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;font-size:14px;line-height:1.7;">${libresPorRifa.join("")}</div>`
       : `<div class="state"><span class="emoji">🎉</span>¡Todos los números vendidos!</div>`;
     document.getElementById("open-sheet").href = sheetWebUrl;
   }
@@ -733,12 +1050,23 @@ function toast(msg) {
 /* ============================================================
    Admin
    ============================================================ */
-function checkAdmin() {
+async function sha256Hex(s) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function checkAdmin() {
   const p = new URLSearchParams(location.search);
   const key = p.get("admin");
-  if (key && key === CONFIG.adminKey) {
-    document.body.classList.add("is-admin");
-    try { sessionStorage.setItem("rifa-admin", "1"); } catch {}
+  if (key) {
+    try {
+      const h = await sha256Hex(key);
+      if (h === CONFIG.adminKeyHash) {
+        document.body.classList.add("is-admin");
+        try { sessionStorage.setItem("rifa-admin", "1"); } catch {}
+        history.replaceState(null, "", location.pathname);
+      }
+    } catch {}
   } else if (sessionStorage.getItem("rifa-admin") === "1") {
     document.body.classList.add("is-admin");
   }
@@ -753,6 +1081,38 @@ function checkAdmin() {
     const libres = txt.replace(/^.*libres:\s*/i, "").trim();
     navigator.clipboard?.writeText(libres).then(
       () => toast("Libres copiados"),
+      () => toast("No se pudo copiar")
+    );
+  });
+}
+
+/* ============================================================
+   Copiar datos de transferencia
+   ============================================================ */
+function wireTransferCopy() {
+  document.querySelectorAll("[data-copy]").forEach(el => {
+    el.addEventListener("click", () => {
+      const v = el.dataset.copy;
+      navigator.clipboard?.writeText(v).then(
+        () => toast(`Copiado: ${v}`),
+        () => toast("No se pudo copiar")
+      );
+    });
+  });
+  const btn = document.getElementById("copy-all");
+  if (btn) btn.addEventListener("click", () => {
+    const txt = [
+      "Datos de transferencia — Rifa Paola Soto",
+      "Valor por número: $1.000",
+      "Banco: BancoEstado",
+      "Tipo de cuenta: CuentaRUT",
+      "Nº de cuenta: 14279967",
+      "RUT: 14.279.967-7",
+      "Nombre: Paola Soto",
+      "Email: Denisse.psoto89@gmail.com",
+    ].join("\n");
+    navigator.clipboard?.writeText(txt).then(
+      () => toast("Datos copiados al portapapeles"),
       () => toast("No se pudo copiar")
     );
   });
@@ -784,13 +1144,13 @@ function init() {
   document.getElementById("brand-title").textContent = CONFIG.titulo;
   document.getElementById("subtitulo").textContent = CONFIG.subtitulo;
   initTheme();
-  checkAdmin();
   wireSearch();
   wireViewToggle();
+  wireTransferCopy();
   document.getElementById("refresh-btn").addEventListener("click", () => {
     toast("Actualizando…"); load();
   });
-  load();
+  checkAdmin().then(load);
   if (CONFIG.autoRefreshMs > 0) setInterval(load, CONFIG.autoRefreshMs);
 }
 document.addEventListener("DOMContentLoaded", init);
