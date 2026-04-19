@@ -39,6 +39,30 @@ const CONFIG = {
   autoRefreshMs: 60000,
 };
 
+// Precarga de la foto de portada de Paola como data URL para incrustar en el PDF.
+// Si falla (offline, etc.) el PDF se genera sin foto sin romper.
+let paolaImgDataUrl = null;
+(function preloadPaolaImg() {
+  try {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const maxSide = 400;
+        const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.round(img.naturalWidth * scale);
+        const h = Math.round(img.naturalHeight * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        paolaImgDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      } catch (_) { paolaImgDataUrl = null; }
+    };
+    img.onerror = () => { paolaImgDataUrl = null; };
+    img.src = "paola.jpg";
+  } catch (_) { /* no-op */ }
+})();
+
 /* ============================================================
    Sheet fetch
    Requiere que el Sheet esté compartido como "Cualquiera con el enlace".
@@ -870,27 +894,42 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
       y += 12;
     }
 
-    // Caja destacada a la derecha: "¡Y MUCHOS MAS PREMIOS!"
+    // Caja destacada a la derecha: foto de Paola + "¡Y MUCHOS PREMIOS MÁS!"
+    // Color oscuro para buen contraste en impresión B&W (fondo se ve gris oscuro,
+    // texto blanco se lee bien).
+    const PURPLE_DARK = [76, 29, 149];  // violet-800 — imprime ~gris oscuro
     const premiosEndY = y;
     const pBoxTop = premiosStartY - 4;
-    const pBoxH = Math.max(premiosEndY - pBoxTop, 88);
-    doc.setFillColor(...PURPLE);
-    doc.setDrawColor(...PURPLE);
-    doc.roundedRect(rightColX, pBoxTop, rightColW, pBoxH, 8, 8, "F");
-    // Estrellas decorativas
+    const pBoxH = Math.max(premiosEndY - pBoxTop, 158);
+    // Caja principal — violeta oscuro (alto contraste B&W)
+    doc.setFillColor(...PURPLE_DARK);
+    doc.roundedRect(rightColX, pBoxTop, rightColW, pBoxH, 10, 10, "F");
+
+    // Foto de Paola en la parte superior de la caja
+    const photoSize = 58;
+    const photoX = rightColX + (rightColW - photoSize) / 2;
+    const photoY = pBoxTop + 12;
+    // Marco blanco detrás de la foto (se ve bien en color y en B&W)
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(photoX - 3, photoY - 3, photoSize + 6, photoSize + 6, 6, 6, "F");
+    if (paolaImgDataUrl) {
+      try {
+        doc.addImage(paolaImgDataUrl, "JPEG", photoX, photoY, photoSize, photoSize);
+      } catch (_) { /* si falla, queda el marco blanco vacío */ }
+    }
+
+    // Texto "¡Y MUCHOS PREMIOS MÁS!" bajo la foto
+    const textStartY = photoY + photoSize + 22;
     doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(10);
-    doc.text("* * *", rightColX + rightColW / 2, pBoxTop + 14, { align: "center" });
-    // Texto principal
-    doc.setFontSize(16);
-    const pBoxCy = pBoxTop + pBoxH / 2;
-    doc.text("Y MUCHOS", rightColX + rightColW / 2, pBoxCy - 4, { align: "center" });
-    doc.text("MAS PREMIOS!", rightColX + rightColW / 2, pBoxCy + 14, { align: "center" });
-    // Subtitulo
-    doc.setFont("helvetica", "normal"); doc.setFontSize(8);
-    doc.text("Lista completa en", rightColX + rightColW / 2, pBoxTop + pBoxH - 18, { align: "center" });
+    doc.setFont("helvetica", "bold"); doc.setFontSize(13);
+    doc.text("\u00A1Y MUCHOS", rightColX + rightColW / 2, textStartY, { align: "center" });
+    doc.text("PREMIOS M\u00C1S!", rightColX + rightColW / 2, textStartY + 14, { align: "center" });
+
+    // URL abajo
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7.5);
+    doc.text("Lista completa en:", rightColX + rightColW / 2, pBoxTop + pBoxH - 15, { align: "center" });
     doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
-    doc.text("rifa-paolasoto.vercel.app", rightColX + rightColW / 2, pBoxTop + pBoxH - 8, { align: "center" });
+    doc.text("rifa-paolasoto.vercel.app", rightColX + rightColW / 2, pBoxTop + pBoxH - 5, { align: "center" });
     doc.setTextColor(...TEXT);
 
     // Tabla de números — SIEMPRE 1 a 15
@@ -1010,6 +1049,9 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     doc.setFont("helvetica", "bold"); doc.setFontSize(9);
     doc.setTextColor(...MUTED);
     doc.text("Dudas: Deny - Denisse.psoto89@gmail.com", PW / 2, y, { align: "center" });
+    y += 11;
+    doc.setTextColor(...PURPLE);
+    doc.text("WhatsApp: +56 9 4596 1962", PW / 2, y, { align: "center" });
   }
 
   const safeNombre = nombre.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s-]/g, "").trim().replace(/\s+/g, "_");
