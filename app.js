@@ -826,8 +826,13 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     doc.setTextColor(...PURPLE);
     doc.text(`${cantidad} talonario(s)  -  ${cantidad * N} numeros  -  $1.000 c/u`, ML + 12, y + 64);
 
-    // Premios
+    // Premios (dos columnas: lista a la izquierda + caja destacada "y muchos mas" a la derecha)
     y += 84;
+    const premiosStartY = y;
+    const leftColW = Math.floor(CW * 0.6);
+    const rightColX = ML + leftColW + 14;
+    const rightColW = CW - leftColW - 14;
+
     doc.setFont("helvetica", "bold"); doc.setFontSize(11);
     doc.setTextColor(...TEXT);
     doc.text("PREMIOS", ML, y);
@@ -846,7 +851,7 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
         const nombrePremio = fixText(p.nombre || p.descripcion || p.premio || "Premio");
         const desc = p.descripcion && p.nombre ? ` - ${fixText(p.descripcion)}` : "";
         const linea = `${lugar}  ${nombrePremio}${desc}`;
-        const lineas = wrap(linea, 95);
+        const lineas = wrap(linea, 55);
         lineas.forEach((ln, idx) => {
           if (idx === 0) {
             doc.setFont("helvetica", "bold");
@@ -864,6 +869,29 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
       doc.text("Los premios se anunciaran pronto en la web de la rifa.", ML + 4, y);
       y += 12;
     }
+
+    // Caja destacada a la derecha: "¡Y MUCHOS MAS PREMIOS!"
+    const premiosEndY = y;
+    const pBoxTop = premiosStartY - 4;
+    const pBoxH = Math.max(premiosEndY - pBoxTop, 88);
+    doc.setFillColor(...PURPLE);
+    doc.setDrawColor(...PURPLE);
+    doc.roundedRect(rightColX, pBoxTop, rightColW, pBoxH, 8, 8, "F");
+    // Estrellas decorativas
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+    doc.text("* * *", rightColX + rightColW / 2, pBoxTop + 14, { align: "center" });
+    // Texto principal
+    doc.setFontSize(16);
+    const pBoxCy = pBoxTop + pBoxH / 2;
+    doc.text("Y MUCHOS", rightColX + rightColW / 2, pBoxCy - 4, { align: "center" });
+    doc.text("MAS PREMIOS!", rightColX + rightColW / 2, pBoxCy + 14, { align: "center" });
+    // Subtitulo
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8);
+    doc.text("Lista completa en", rightColX + rightColW / 2, pBoxTop + pBoxH - 18, { align: "center" });
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
+    doc.text("rifa-paolasoto.vercel.app", rightColX + rightColW / 2, pBoxTop + pBoxH - 8, { align: "center" });
+    doc.setTextColor(...TEXT);
 
     // Tabla de números — SIEMPRE 1 a 15
     y += 8;
