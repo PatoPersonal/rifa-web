@@ -1262,6 +1262,32 @@ function wireTalonarioForm() {
   const inputCant = document.getElementById("tal-cantidad");
   const hint = document.getElementById("tal-hint");
   const N = Math.max(1, Number(CONFIG.numerosPorRifa) || 15);
+
+  // Persistencia local: los datos no se borran si recargás o cerrás la pestaña.
+  const PERSIST_KEY = "rifa-talonario-form";
+  const persistFields = ["tal-nombre", "tal-correo", "tal-telefono", "tal-cantidad"];
+  try {
+    const saved = JSON.parse(localStorage.getItem(PERSIST_KEY) || "{}");
+    persistFields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && typeof saved[id] === "string" && saved[id].length) el.value = saved[id];
+    });
+  } catch (_) { /* ignore */ }
+  const savePersist = () => {
+    try {
+      const data = {};
+      persistFields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) data[id] = el.value || "";
+      });
+      localStorage.setItem(PERSIST_KEY, JSON.stringify(data));
+    } catch (_) { /* ignore */ }
+  };
+  persistFields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("input", savePersist);
+  });
+
   const updateHint = () => {
     if (!hint || !inputCant) return;
     const n = Math.max(1, Math.min(100, Number(inputCant.value) || 1));

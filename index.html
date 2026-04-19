@@ -789,9 +789,17 @@
     font-weight: 700; font-size: 14px;
     display: inline-flex; align-items: center; gap: 8px;
   }
+  .talonario-after {
+    margin-top: 22px; padding-top: 18px;
+    border-top: 1px dashed var(--border);
+  }
+  .talonario-after-title {
+    margin: 0 0 12px; font-size: 16px; font-weight: 700;
+    color: var(--text); line-height: 1.3;
+  }
   .talonario-steps {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px; margin-top: 16px;
+    gap: 12px; margin-top: 4px;
   }
   .talonario-step {
     padding: 14px; border: 1px solid var(--border); border-radius: 12px;
@@ -810,6 +818,14 @@
     border-radius: 8px; font-size: 13px; color: var(--muted); line-height: 1.6;
   }
   .talonario-contact strong { color: var(--text); }
+  .talonario-step a,
+  .talonario-contact a {
+    color: var(--brand); text-decoration: underline;
+    text-decoration-thickness: 1.5px; text-underline-offset: 2px;
+    font-weight: 700;
+  }
+  .talonario-step a strong,
+  .talonario-contact a strong { color: var(--brand); }
   .fotos-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 12px;
@@ -1109,47 +1125,10 @@
     </button>
     <div id="pedir-talonario-body" style="display:none;margin-top:16px;">
     <p class="talonario-intro">
-      Si quieres apoyar a Paola vendiendo números entre tu gente, <strong>solicita aquí tu(s) talonario(s)</strong>
-      (de 1 a 100). Cada talonario tiene un <strong>código único identificador</strong> y contiene
-      <strong>15 números del 01 al 15</strong> para vender. Te descargás el PDF listo para imprimir
-      y vender entre tu gente.
+      Completá tus datos y <strong>descargá tu talonario en PDF</strong> — listo para imprimir y vender.
+      Cada talonario contiene <strong>15 números (01 al 15)</strong> y lleva un código único que lo identifica.
     </p>
 
-    <div class="disclaimer-box">
-      <div class="disclaimer-title">📋 ¿Cómo funciona? — Léelo antes de descargar</div>
-      <ol class="disclaimer-list">
-        <li>
-          <strong>Descargás tu talonario</strong> con tu nombre, correo y teléfono.
-          Cada talonario se identifica por un <strong>código único</strong> (letra, número
-          o combinación — hasta 100 caracteres, ej: <em>"1DE"</em>, <em>"7AC"</em>, <em>"DENY"</em>).
-          Dentro de cada talonario los números van siempre del <strong>01 al 15</strong>,
-          así no hay confusiones al vender.
-        </li>
-        <li>
-          <strong>Mientras vendés</strong>, tu talonario aparece en la tabla de participantes marcado con
-          <strong>"?"</strong> junto a tu nombre y cantidad de talonarios. Esto deja constancia pública de que
-          estás vendiendo, pero <em>aún no cuenta</em> como número pagado ni en circulación hasta que confirmes.
-        </li>
-        <li>
-          <strong>Cuando termines de vender</strong>, envías a <strong>Denisse.psoto89@gmail.com</strong>:
-          <ol type="a" style="margin:6px 0 0 0;padding-left:22px;">
-            <li>Foto del talonario físico completo (con los nombres escritos).</li>
-            <li>Listado escrito o foto del talonario en PDF con los nombres.</li>
-            <li>Comprobante de transferencia del total.</li>
-          </ol>
-        </li>
-        <li>
-          <strong>Recién ahí</strong> la familia reemplaza los "?" por los <strong>nombres reales</strong>
-          de los compradores y los marca como <strong>pagados</strong>. Solo esos quedan registrados
-          oficialmente en la rifa.
-        </li>
-      </ol>
-      <div class="disclaimer-warn">
-        ⚠️ <strong>Importante:</strong> si descargas un talonario y nunca envías el pago con foto y comprobante,
-        esos números <strong>no cuentan</strong> como talonarios en circulación y la familia los libera.
-        Así aseguramos que solo los pagos confirmados lleguen a la rifa.
-      </div>
-    </div>
     <form class="talonario-form" id="talonario-form" novalidate>
       <div>
         <label for="tal-nombre">Tu nombre</label>
@@ -1174,28 +1153,36 @@
       </button>
     </form>
 
-    <div class="talonario-steps">
-      <div class="talonario-step">
-        <span class="talonario-step-num">1</span><strong>Completa el formulario</strong><br>
-        Se descargará tu talonario en PDF con tu nombre, los premios y espacios para anotar cada comprador.
-      </div>
-      <div class="talonario-step">
-        <span class="talonario-step-num">2</span><strong>Vende tus 15 números</strong><br>
-        Cada número vale <strong>$1.000</strong>. Anota el nombre de cada comprador en el talonario.
-      </div>
-      <div class="talonario-step">
-        <span class="talonario-step-num">3</span><strong>Envía foto + comprobante</strong><br>
-        Cuando tengas el talonario listo, envía una <strong>foto del talonario completo</strong> y el
-        <strong>comprobante de transferencia</strong> al correo
-        <strong>Denisse.psoto89@gmail.com</strong>. Basta con una foto para registrar los números en el sorteo.
+    <div class="talonario-after">
+      <h3 class="talonario-after-title">📋 Así de simple — solo tenés que descargarlo</h3>
+      <div class="talonario-steps">
+        <div class="talonario-step">
+          <span class="talonario-step-num">1</span><strong>Descargás tu PDF</strong><br>
+          Lo imprimís en casa o en cualquier impresora. El talonario ya viene con tu nombre y un código único que lo identifica.
+        </div>
+        <div class="talonario-step">
+          <span class="talonario-step-num">2</span><strong>Vendés entre tu gente</strong><br>
+          Cada número vale <strong>$1.000</strong>. Anotá nombre y teléfono de cada comprador en los espacios del talonario.
+        </div>
+        <div class="talonario-step">
+          <span class="talonario-step-num">3</span><strong>Enviás foto + comprobante</strong><br>
+          Cuando termines, mandás foto del talonario lleno y el comprobante de transferencia por
+          <a href="https://wa.me/56945961962" target="_blank" rel="noopener"><strong>WhatsApp +56 9 4596 1962</strong></a>
+          o al correo <strong>Denisse.psoto89@gmail.com</strong>. Deny marca cada número como pagado en la web.
+        </div>
+        <div class="talonario-step">
+          <span class="talonario-step-num">4</span><strong>Revisás cómo va tu talonario</strong><br>
+          Mientras vendés, tu talonario aparece en la web con tu nombre y "?" junto a cada número.
+          Después del pago, Deny los completa con los compradores reales. Podés ver el avance en vivo acá mismo.
+        </div>
       </div>
     </div>
 
     <p class="talonario-contact">
-      💜 <strong>¿Dudas o cualquier cosa?</strong> Contáctate con <strong>Deny</strong> al correo
-      <strong>Denisse.psoto89@gmail.com</strong> o por
+      💜 <strong>¿Consultás cómo va tu situación?</strong> Comunicate directo con <strong>Deny</strong> por
       <a href="https://wa.me/56945961962" target="_blank" rel="noopener"><strong>WhatsApp +56 9 4596 1962</strong></a>
-      y te ayudamos de inmediato.
+      — te atiende al toque y te cuenta en qué etapa está tu talonario. También podés escribirle al correo
+      <strong>Denisse.psoto89@gmail.com</strong>.
     </p>
     </div>
   </section>
