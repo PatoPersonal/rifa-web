@@ -31,7 +31,7 @@ const CONFIG = {
 
   // URL del Apps Script Web App que registra descargas en la pestaña "Descargas".
   // Se deja vacío hasta que se publique el script (ver apps-script/Code.gs).
-  registryUrl: "",
+  registryUrl: "https://script.google.com/macros/s/AKfycbxMudkkSox8Pfyb-JbH1if9CkWJIxCIYeuRVU_bC2s7p4BqLvWZDq1Gk65jdB2cXKi9/exec",
   // Secreto compartido con el Apps Script — cambialo por algo aleatorio.
   registrySecret: "rifa-paola-descargas-2026",
 
