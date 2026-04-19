@@ -433,10 +433,10 @@ function renderNumeros(list) {
   // Grid por talonario (15 celdas con estado de cada número)
   renderTalonariosGrid(talCodes, byCell, vendedorByTal, N);
 
-  // Orden por estado: reservados (sin pagos) → mixtos (reservados + pagados)
-  //                  → completos pagados → con libres / vacíos.
-  //                  Dentro del mismo rank, índice global DESC.
-  const rankOf = (code) => {
+  // Orden por estado (consistente con la grilla superior):
+  //   con libres (disponibles) → mixtos → completos pagados → reservados.
+  //   Dentro del mismo rank, índice global DESC.
+  const countsOf = (code) => {
     let paid = 0, reserved = 0, free = 0;
     for (let i = 1; i <= N; i++) {
       const rec = byCell.get(mapKey(code, i));
@@ -444,14 +444,23 @@ function renderNumeros(list) {
       else if (rec.status === "paid") paid++;
       else if (rec.status === "reserved") reserved++;
     }
-    if (reserved > 0 && paid === 0) return 0;
-    if (reserved > 0 && paid > 0) return 1;
-    if (reserved === 0 && paid > 0 && free === 0) return 2;
+    return { paid, reserved, free };
+  };
+  const rankOf = (code) => {
+    const { paid, reserved, free } = countsOf(code);
+    if (free > 0) return 0;
+    if (paid > 0 && reserved > 0) return 1;
+    if (paid > 0 && reserved === 0) return 2;
     return 3;
   };
   const sortedTalCodes = [...talCodes].sort((a, b) => {
     const ra = rankOf(a), rb = rankOf(b);
     if (ra !== rb) return ra - rb;
+    if (ra === 0) {
+      const fa = countsOf(a).free;
+      const fb = countsOf(b).free;
+      if (fa !== fb) return fb - fa;
+    }
     const pa = parseTalCode(a) || { prefix: a, index: -1 };
     const pb = parseTalCode(b) || { prefix: b, index: -1 };
     if (pa.index !== pb.index) return pb.index - pa.index;
@@ -524,13 +533,16 @@ function _tgCounts(code) {
   return { paid, reserved, free };
 }
 
-// Rank de orden: 0 = reservados (sin pagos), 1 = algunos reservados + algunos pagados,
-// 2 = completos pagados (sin reservas ni libres), 3 = con libres / vacíos.
+// Rank de orden (menor = se muestra primero):
+//   0 = tiene cupos libres (DISPONIBLES para comprar)
+//   1 = completo con mezcla de pagados y reservados
+//   2 = completo pagado (sin libres ni reservados)
+//   3 = completo reservado (sin pagados ni libres)
 function _tgRank(code) {
   const { paid, reserved, free } = _tgCounts(code);
-  if (reserved > 0 && paid === 0) return 0;
-  if (reserved > 0 && paid > 0) return 1;
-  if (reserved === 0 && paid > 0 && free === 0) return 2;
+  if (free > 0) return 0;
+  if (paid > 0 && reserved > 0) return 1;
+  if (paid > 0 && reserved === 0) return 2;
   return 3;
 }
 
@@ -544,11 +556,16 @@ function renderTalonariosGrid(codes, byCell, vendedorByTal, N) {
   // Guardar para re-renders de paginación
   _tgByCell = byCell; _tgVendedor = vendedorByTal; _tgN = N;
 
-  // Orden: reservados (sin pagos) → mixtos (algunos reservados + algunos pagados)
-  //        → completos pagados → con espacios libres. Dentro del mismo rank, índice DESC.
+  // Orden: con libres (más libres primero) → mixtos → completos pagados → reservados.
+  // Dentro del mismo rank, índice DESC (los más nuevos arriba).
   _tgSorted = [...codes].sort((a, b) => {
     const ra = _tgRank(a), rb = _tgRank(b);
     if (ra !== rb) return ra - rb;
+    if (ra === 0) {
+      const fa = _tgCounts(a).free;
+      const fb = _tgCounts(b).free;
+      if (fa !== fb) return fb - fa;
+    }
     const pa = parseTalCode(a) || { index: -1 };
     const pb = parseTalCode(b) || { index: -1 };
     return pb.index - pa.index;
@@ -591,9 +608,9 @@ function _renderTalonariosGridPage() {
           <div class="tg-code">Talonario <strong>${esc(code)}</strong></div>
           ${vendedor ? `<div class="tg-vendedor">${esc(vendedor)}</div>` : ""}
           <div class="tg-counts">
-            <span class="tg-count paid">${paid} pagado${paid === 1 ? "" : "s"}</span>
+            <span class="tg-count free">${N - paid - reserved} libre${(N - paid - reserved) === 1 ? "" : "s"}</span>
             · <span class="tg-count reserved">${reserved} reservado${reserved === 1 ? "" : "s"}</span>
-            · ${N - paid - reserved} libre${(N - paid - reserved) === 1 ? "" : "s"}
+            · <span class="tg-count paid">${paid} pagado${paid === 1 ? "" : "s"}</span>
           </div>
         </div>
         <div class="tg-grid">${cells.join("")}</div>
@@ -651,21 +668,63 @@ function generarCodigosTalonarios(nombre, cantidad) {
 /* ============================================================
    Participantes: render paginado + búsqueda
    ============================================================ */
+function _buildSearchSummary(filtered, rawQuery) {
+  const paidN = filtered.filter(r => r.status === "paid").length;
+  const reservedN = filtered.filter(r => r.status === "reserved").length;
+  const names = filtered.map(r => (r.nombre || "").trim()).filter(Boolean);
+  const uniq = [...new Set(names.map(n => n.toLowerCase()))];
+  const countWord = (n) => `${n} número${n === 1 ? "" : "s"}`;
+  if (uniq.length === 1 && names.length) {
+    const nombre = names.find(n => n.toLowerCase() === uniq[0]) || names[0];
+    return `<div class="search-summary">
+      <span class="ss-icon">👤</span>
+      <div class="ss-body">
+        <div><strong>${esc(nombre)}</strong> tiene <strong>${countWord(filtered.length)}</strong> registrado${filtered.length === 1 ? "" : "s"}</div>
+        <div class="ss-breakdown">
+          <span class="ss-chip paid">${paidN} pagado${paidN === 1 ? "" : "s"}</span>
+          <span class="ss-chip reserved">${reservedN} reservado${reservedN === 1 ? "" : "s"}</span>
+        </div>
+      </div>
+    </div>`;
+  }
+  if (uniq.length > 1) {
+    return `<div class="search-summary">
+      <span class="ss-icon">🔎</span>
+      <div class="ss-body">
+        <div><strong>${countWord(filtered.length)}</strong> · <strong>${uniq.length}</strong> personas coinciden con "${esc(rawQuery)}"</div>
+        <div class="ss-breakdown">
+          <span class="ss-chip paid">${paidN} pagado${paidN === 1 ? "" : "s"}</span>
+          <span class="ss-chip reserved">${reservedN} reservado${reservedN === 1 ? "" : "s"}</span>
+        </div>
+      </div>
+    </div>`;
+  }
+  return `<div class="search-summary">
+    <span class="ss-icon">🔎</span>
+    <div class="ss-body">
+      <div><strong>${countWord(filtered.length)}</strong> coincide${filtered.length === 1 ? "" : "n"} con "${esc(rawQuery)}"</div>
+    </div>
+  </div>`;
+}
+
 function renderParticipantsPage() {
   const host = document.getElementById("table-view");
   if (!host) return;
 
-  const q = normSearch(participantsQuery.trim());
+  const rawQuery = participantsQuery.trim();
+  const q = normSearch(rawQuery);
   const filtered = q
     ? participantsRows.filter(r => r.searchKey.includes(q))
     : participantsRows;
 
   if (!filtered.length) {
     host.innerHTML = q
-      ? `<div class="state"><span class="emoji">🔍</span>Ningún participante coincide con "<strong>${esc(q)}</strong>".</div>`
+      ? `<div class="state"><span class="emoji">🔍</span>Ningún participante coincide con "<strong>${esc(rawQuery)}</strong>".</div>`
       : `<div class="state"><span class="emoji">🕒</span>Aún no hay participantes confirmados.<br><small>Cuando alguien envíe su comprobante, aparecerá acá con su nombre y número.</small></div>`;
     return;
   }
+
+  const summaryHtml = q ? _buildSearchSummary(filtered, rawQuery) : "";
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PARTICIPANTS_PAGE_SIZE));
   if (participantsPage > totalPages) participantsPage = totalPages;
@@ -699,6 +758,7 @@ function renderParticipantsPage() {
     </div>` : `<div class="pager-summary">${filtered.length} participante${filtered.length === 1 ? "" : "s"}</div>`;
 
   host.innerHTML = `
+    ${summaryHtml}
     <div class="table-wrap"><table>
       <thead><tr><th>Talonario</th><th>Número</th><th>Nombre completo</th><th>Fecha</th><th>Estado</th></tr></thead>
       <tbody id="tbody">${trs}</tbody>
