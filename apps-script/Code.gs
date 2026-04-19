@@ -46,29 +46,58 @@ var SECRET = "rifa-paola-descargas-2026";
 // Correo público de contacto de la rifa (visible en CC del correo al participante).
 var EMAIL_DENY = "Denisse.psoto89@gmail.com";
 
-// Correos privados internos que reciben alertas de cada descarga (BCC + alerta estructurada).
-// ⚠️  NO se hardcodean acá porque este archivo está en un repo público.
-//     Se guardan en Project Properties del Apps Script. Corré la función
-//     `setupEmailPrivados()` UNA SOLA VEZ desde el editor de Apps Script
-//     después de pegar tus correos privados reales dentro de esa función.
-function _getEmailPato() {
-  return PropertiesService.getScriptProperties().getProperty("EMAIL_PATO") || "";
+// Correos internos que reciben alertas de cada descarga (BCC + alerta estructurada).
+// Los defaults se usan si no hay override en Script Properties. Para cambiarlos
+// sin redeploy, corre `setupEmailPrivados()` con los nuevos valores.
+var EMAIL_PATO_DEFAULT = "pato.rojas.86@gmail.com";
+var EMAIL_CONI_DEFAULT = "conisaldivia.s@gmail.com";
+
+function _emailOrDefault(prop, fallback) {
+  var v = (PropertiesService.getScriptProperties().getProperty(prop) || "").trim();
+  // Si está vacío, placeholder o no tiene @ valido, caemos al default.
+  if (!v || /COMPLETAR|example\.com|placeholder/i.test(v) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+    return fallback;
+  }
+  return v;
 }
-function _getEmailConi() {
-  return PropertiesService.getScriptProperties().getProperty("EMAIL_CONI") || "";
-}
+function _getEmailPato() { return _emailOrDefault("EMAIL_PATO", EMAIL_PATO_DEFAULT); }
+function _getEmailConi() { return _emailOrDefault("EMAIL_CONI", EMAIL_CONI_DEFAULT); }
 
 /**
- * Setup único: pega acá tus correos privados, ejecuta la función UNA VEZ
- * desde el editor (botón ▶ Ejecutar), autoriza los permisos, y listo.
- * Después podés borrar los correos de esta función (ya quedan guardados).
+ * Override opcional via Script Properties. Corré la función UNA VEZ desde el
+ * editor de Apps Script si queres cambiar los correos internos sin redeploy.
  */
 function setupEmailPrivados() {
   PropertiesService.getScriptProperties().setProperties({
-    EMAIL_PATO: "COMPLETAR_CORREO_PATO@example.com",
-    EMAIL_CONI: "COMPLETAR_CORREO_CONI@example.com",
+    EMAIL_PATO: EMAIL_PATO_DEFAULT,
+    EMAIL_CONI: EMAIL_CONI_DEFAULT,
   });
   Logger.log("Correos privados guardados en Script Properties ✓");
+}
+
+/**
+ * Diagnostico: manda un correo de prueba a Deny, Pato y Coni con los datos
+ * actualmente configurados. Util para verificar el deploy antes de que alguien
+ * descargue un talonario real. Correr desde el editor → ▶ Ejecutar.
+ */
+function testEmails() {
+  var tos = [EMAIL_DENY, _getEmailPato(), _getEmailConi()]
+    .filter(function (x) { return x && x.trim(); });
+  if (!tos.length) {
+    Logger.log("❌ No hay destinatarios configurados");
+    return;
+  }
+  Logger.log("Enviando prueba a: " + tos.join(", "));
+  MailApp.sendEmail(tos.join(","), "✓ Prueba — Rifa Paola Soto (Apps Script)",
+    "Este es un correo de prueba del Apps Script de la rifa.\n\n" +
+    "Si lo recibiste, los avisos de descarga van a llegarte bien.\n\n" +
+    "Destinatarios configurados:\n" +
+    "  Deny: " + EMAIL_DENY + "\n" +
+    "  Pato: " + _getEmailPato() + "\n" +
+    "  Coni: " + _getEmailConi() + "\n\n" +
+    "Cuota diaria restante (aprox): " + MailApp.getRemainingDailyQuota() + " envios.",
+    { name: REMITENTE_NOMBRE });
+  Logger.log("✓ Prueba enviada. Cuota diaria restante: " + MailApp.getRemainingDailyQuota());
 }
 
 // Nombre que aparece como remitente en el correo
