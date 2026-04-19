@@ -279,53 +279,47 @@ function _sendTalonarioEmail(p) {
     : (p.desde ? ("Talonario N° " + p.desde) : "");
 
   // ====================================================================
-  // 1) Correo al PARTICIPANTE — SOLO a él, sin CC ni BCC. Mensaje de
-  //    agradecimiento + PDF adjunto. Un solo correo, limpio.
+  // 1) Correo al PARTICIPANTE — SOLO a él, sin CC ni BCC. Un solo correo,
+  //    limpio. Asunto y contenido optimizados para evitar filtros de spam:
+  //    sin emojis, sin exclamaciones, HTML y plain text equivalentes.
   // ====================================================================
-  var subject = "¡Gracias por apoyar a Paola! — Tu talonario está listo 💜";
+  var totalNumeros = p.cantidad * 15;
+  var subject = rangoTxt
+    ? ("Tu talonario de la Rifa Paola Soto (" + rangoTxt.replace(/^Talonario(\(s\))? /, "") + ")")
+    : "Tu talonario de la Rifa Paola Soto";
 
   var html =
     '<div style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;max-width:560px;line-height:1.6;">' +
-      '<h2 style="color:#7c3aed;margin:0 0 12px;">¡Gracias por sumarte, ' + _escHtml(p.nombre) + '! 💜</h2>' +
-      '<p style="margin:0 0 12px;">Cada número vendido es un paso más en la recuperación de <strong>Paola</strong>. Tu ayuda significa muchísimo para ella y su familia.</p>' +
-      '<p style="margin:0 0 14px;">Adjunto va tu talonario en PDF, listo para imprimir y empezar a vender.' +
-      (rangoTxt ? ('<br><strong>' + _escHtml(rangoTxt) + '</strong> — ' + (p.cantidad * 15) + ' números en total.') : '') +
+      '<p style="margin:0 0 12px;">Hola ' + _escHtml(p.nombre) + ',</p>' +
+      '<p style="margin:0 0 12px;">Adjunto encontrarás tu talonario en PDF, listo para imprimir.' +
+      (rangoTxt ? (' Corresponde al <strong>' + _escHtml(rangoTxt) + '</strong> (' + totalNumeros + ' números).') : '') +
       '</p>' +
-      '<div style="background:#f5f3ff;border-left:3px solid #7c3aed;padding:12px 14px;margin:14px 0;">' +
-        '<strong>Cuando termines de vender:</strong><br>' +
-        'Envíale a Deny una <strong>foto del talonario físico</strong> y el ' +
-        '<strong>comprobante de transferencia</strong> a ' +
-        '<a href="mailto:' + EMAIL_DENY + '" style="color:#7c3aed;">' + EMAIL_DENY + '</a>.' +
-      '</div>' +
-      '<p style="font-size:13px;color:#64748b;margin:10px 0;">' +
-        '<strong>Datos para transferir:</strong><br>' +
-        'BancoEstado — CuentaRUT<br>' +
+      '<p style="margin:0 0 12px;">Cuando termines de vender, envía una foto del talonario físico y el comprobante de transferencia a <a href="mailto:' + EMAIL_DENY + '" style="color:#7c3aed;">' + EMAIL_DENY + '</a>.</p>' +
+      '<p style="margin:0 0 6px;"><strong>Datos para transferir</strong></p>' +
+      '<p style="margin:0 0 12px;">' +
+        'BancoEstado, CuentaRUT<br>' +
         'RUT: 14.279.967-7<br>' +
         'Nombre: Paola Soto<br>' +
-        'Email: Denisse.psoto89@gmail.com' +
+        'Email: ' + EMAIL_DENY +
       '</p>' +
-      '<p style="font-size:13px;color:#64748b;">' +
-        'Cada comprador puede verificar su pago en la web: ' +
-        '<a href="https://rifa-paolasoto.vercel.app/" style="color:#7c3aed;">rifa-paolasoto.vercel.app</a>' +
-      '</p>' +
-      '<p style="margin:18px 0 0;color:#7c3aed;font-weight:bold;">¡Gracias por ser parte de esto! 💜</p>' +
-      '<p style="font-size:12px;color:#94a3b8;margin-top:16px;">Este correo fue generado automáticamente desde la web de la rifa.</p>' +
+      '<p style="margin:0 0 12px;">Cada comprador puede verificar su pago en <a href="https://rifa-paolasoto.vercel.app/" style="color:#7c3aed;">rifa-paolasoto.vercel.app</a>.</p>' +
+      '<p style="margin:14px 0 0;">Gracias por sumarte.</p>' +
+      '<p style="margin:2px 0 0;">Equipo Rifa Paola Soto</p>' +
     '</div>';
 
   var plain =
-    "¡Gracias por sumarte, " + p.nombre + "! 💜\n\n" +
-    "Cada número vendido es un paso más en la recuperación de Paola. Tu ayuda significa muchísimo.\n\n" +
-    "Adjunto va tu talonario en PDF, listo para imprimir y empezar a vender.\n" +
-    (rangoTxt ? (rangoTxt + " — " + (p.cantidad * 15) + " números en total.\n\n") : "\n") +
-    "Cuando termines de vender:\n" +
-    "Envíale a Deny una FOTO del talonario físico y el comprobante de transferencia a " + EMAIL_DENY + ".\n\n" +
-    "Datos para transferir:\n" +
-    "  BancoEstado — CuentaRUT\n" +
-    "  RUT: 14.279.967-7\n" +
-    "  Nombre: Paola Soto\n" +
-    "  Email: Denisse.psoto89@gmail.com\n\n" +
+    "Hola " + p.nombre + ",\n\n" +
+    "Adjunto encontrarás tu talonario en PDF, listo para imprimir." +
+    (rangoTxt ? (" Corresponde al " + rangoTxt + " (" + totalNumeros + " números).") : "") + "\n\n" +
+    "Cuando termines de vender, envía una foto del talonario físico y el comprobante de transferencia a " + EMAIL_DENY + ".\n\n" +
+    "Datos para transferir\n" +
+    "BancoEstado, CuentaRUT\n" +
+    "RUT: 14.279.967-7\n" +
+    "Nombre: Paola Soto\n" +
+    "Email: " + EMAIL_DENY + "\n\n" +
     "Cada comprador puede verificar su pago en https://rifa-paolasoto.vercel.app/\n\n" +
-    "¡Gracias por ser parte de esto! 💜";
+    "Gracias por sumarte.\n" +
+    "Equipo Rifa Paola Soto";
 
   MailApp.sendEmail(p.correo, subject, plain, {
     htmlBody: html,
@@ -358,7 +352,7 @@ function _sendAlertaInterna(p, rangoTxt, pdfBlob) {
   if (!tos.length) return;
 
   var telDigits = (p.telefono || "").replace(/[^+\d]/g, "");
-  var subject = "📥 Nueva descarga — " + p.nombre + " (" + p.cantidad + " talonario" + (p.cantidad === 1 ? "" : "s") + ")";
+  var subject = "Nueva descarga: " + p.nombre + " (" + p.cantidad + " talonario" + (p.cantidad === 1 ? "" : "s") + ")";
 
   var html =
     '<div style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;max-width:560px;line-height:1.55;">' +

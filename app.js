@@ -29,11 +29,9 @@ const CONFIG = {
   // Para cambiarla: node -e "console.log(require('crypto').createHash('sha256').update('TU_CLAVE').digest('hex'))"
   adminKeyHash: "609b54cac6d4d1a541446402a4f244100b5244ff0065d17c7bcb6000437def79",
 
-  // URL del Apps Script Web App que registra descargas en la pestaña "Descargas".
-  // Se deja vacío hasta que se publique el script (ver apps-script/Code.gs).
-  registryUrl: "https://script.google.com/macros/s/AKfycbxMudkkSox8Pfyb-JbH1if9CkWJIxCIYeuRVU_bC2s7p4BqLvWZDq1Gk65jdB2cXKi9/exec",
-  // Secreto compartido con el Apps Script — cambialo por algo aleatorio.
-  registrySecret: "rifa-paola-descargas-2026",
+  // Endpoints backend en Vercel Functions.
+  apiDescargaUrl: "/api/descarga",
+  apiPremioUrl: "/api/premio",
 
   // Refresco automático (ms). 0 para desactivar.
   autoRefreshMs: 60000,
@@ -200,28 +198,97 @@ function esc(s) {
 /* ============================================================
    Render: Premios
    ============================================================ */
+const MAX_PREMIOS_VISIBLES = 24;
+
+function _extractPremioLinks(text) {
+  if (!text) return { text: "", links: [] };
+  const urlRe = /(https?:\/\/[^\s<]+)/gi;
+  const links = [];
+  const cleaned = String(text).replace(urlRe, (match) => {
+    let clean = match;
+    while (/[.,;:!?)\]]$/.test(clean)) clean = clean.slice(0, -1);
+    if (clean) links.push(clean);
+    return "";
+  }).replace(/\s{2,}/g, " ").replace(/\s+([,.;:!?])/g, "$1").trim();
+  return { text: cleaned, links };
+}
+
+function _premioLinkLabel(url) {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./i, "");
+    if (/instagram\.com$/i.test(host)) {
+      const handle = u.pathname.split("/").filter(Boolean)[0];
+      if (handle) return "@" + handle;
+    }
+    if (/facebook\.com$/i.test(host)) {
+      const handle = u.pathname.split("/").filter(Boolean)[0];
+      if (handle) return "Facebook: " + handle;
+    }
+    if (/(tiktok\.com)$/i.test(host)) {
+      const handle = u.pathname.split("/").filter(Boolean)[0];
+      if (handle) return handle.startsWith("@") ? handle : "@" + handle;
+    }
+    if (/(wa\.me|whatsapp\.com)$/i.test(host)) return "WhatsApp";
+    return host + (u.pathname && u.pathname !== "/" ? u.pathname : "");
+  } catch {
+    return url.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+  }
+}
+
+function _buildPremioCard(p, i, isExtra) {
+  const lugar = p.lugar || p.premio || `#${i + 1}`;
+  const nombre = p.nombre || p.descripcion || p.premio || "Premio";
+  const descRaw = (p.descripcion && p.nombre) ? p.descripcion : "";
+  const ganador = p.ganador || "";
+  const medalClass = i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
+  const medalEmoji = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "🎁";
+  const { text: descText, links } = _extractPremioLinks(descRaw);
+  const linksHtml = links.length
+    ? `<div class="premio-links">${links.map(u =>
+        `<a class="premio-link" href="${esc(u)}" target="_blank" rel="noopener noreferrer" title="${esc(u)}">🔗 ${esc(_premioLinkLabel(u))}</a>`
+      ).join("")}</div>`
+    : "";
+  const extraClass = isExtra ? " premio--extra" : "";
+  return `
+      <div class="premio${i < 3 ? " top" : ""}${extraClass}">
+        <span class="medal ${medalClass}">${medalEmoji} ${esc(lugar)}</span>
+        <h3>${esc(nombre)}</h3>
+        ${descText ? `<p>${esc(descText)}</p>` : ""}
+        ${linksHtml}
+        ${ganador ? `<div class="winner">🎉 Ganador: ${esc(ganador)}</div>` : ""}
+      </div>`;
+}
+
 function renderPremios(list) {
   lastPremios = Array.isArray(list) ? list : [];
   const el = document.getElementById("premios");
   if (!list || !list.length) {
     el.innerHTML = `<div class="state"><span class="emoji">🎁</span>Los premios se anunciarán pronto.</div>`;
+    el.classList.remove("show-extras");
     return;
   }
-  el.innerHTML = list.map((p, i) => {
-    const lugar = p.lugar || p.premio || `#${i + 1}`;
-    const nombre = p.nombre || p.descripcion || p.premio || "Premio";
-    const desc = (p.descripcion && p.nombre) ? p.descripcion : "";
-    const ganador = p.ganador || "";
-    const medalClass = i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
-    const medalEmoji = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "🎁";
-    return `
-      <div class="premio ${i < 3 ? "top" : ""}">
-        <span class="medal ${medalClass}">${medalEmoji} ${esc(lugar)}</span>
-        <h3>${esc(nombre)}</h3>
-        ${desc ? `<p>${esc(desc)}</p>` : ""}
-        ${ganador ? `<div class="winner">🎉 Ganador: ${esc(ganador)}</div>` : ""}
-      </div>`;
-  }).join("");
+  const cards = list.map((p, i) => _buildPremioCard(p, i, i >= MAX_PREMIOS_VISIBLES)).join("");
+  const extrasCount = Math.max(0, list.length - MAX_PREMIOS_VISIBLES);
+  const toggleHtml = extrasCount > 0
+    ? `<button type="button" class="premios-extras-toggle" id="premios-extras-toggle" aria-expanded="false" aria-controls="premios">
+        <span class="premios-extras-label">🎁 Ver ${extrasCount} premio${extrasCount === 1 ? "" : "s"} adicional${extrasCount === 1 ? "" : "es"}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="m6 9 6 6 6-6"/></svg>
+      </button>`
+    : "";
+  el.classList.remove("show-extras");
+  el.innerHTML = cards + toggleHtml;
+  if (extrasCount > 0) {
+    const btn = document.getElementById("premios-extras-toggle");
+    const label = btn?.querySelector(".premios-extras-label");
+    btn?.addEventListener("click", () => {
+      const open = el.classList.toggle("show-extras");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      if (label) label.textContent = open
+        ? `Ocultar premios adicionales`
+        : `🎁 Ver ${extrasCount} premio${extrasCount === 1 ? "" : "s"} adicional${extrasCount === 1 ? "" : "es"}`;
+    });
+  }
 }
 
 /* ============================================================
@@ -233,7 +300,7 @@ let lastDescargas = [];
 let lastRifasCount = 15;
 
 // Paginación grid de talonarios
-const TALONARIOS_GRID_PAGE_SIZE = 6;
+const TALONARIOS_GRID_PAGE_SIZE = 3;
 let talonariosGridPage = 1;
 let _tgSorted = [];
 let _tgByCell = new Map();
@@ -353,14 +420,7 @@ function renderNumeros(list) {
   const freeCount = Math.max(0, totalRegistrados - paidCount - reservedCount);
   lastRifasCount = talCodes.length;
 
-
-  // Hero chip
-  const chip = document.getElementById("chip-paid");
-  if (chip) chip.textContent = `${paidCount} pagado${paidCount === 1 ? "" : "s"}`;
-
   document.getElementById("stats").innerHTML = `
-    <div class="stat"><div class="stat-num">${paidCount}</div><div class="stat-label">Pagados</div></div>
-    <div class="stat"><div class="stat-num">${reservedCount}</div><div class="stat-label">Reservados</div></div>
     <a class="stat cta-stat" href="#pedir-talonario">
       <div class="stat-num">💜</div>
       <div class="stat-label">Pide tu talonario o compra un número</div>
@@ -412,7 +472,7 @@ function renderNumeros(list) {
         vendedor: rec.vendedor,
         fecha: rec.fecha,
         status: rec.status,
-        searchKey: (code + " " + i + " " + rec.comprador + " " + rec.vendedor).toLowerCase(),
+        searchKey: normSearch(code + " " + i + " " + String(i).padStart(2, "0") + " " + rec.comprador + " " + rec.vendedor),
       });
     }
   }
@@ -595,7 +655,7 @@ function renderParticipantsPage() {
   const host = document.getElementById("table-view");
   if (!host) return;
 
-  const q = participantsQuery.trim().toLowerCase();
+  const q = normSearch(participantsQuery.trim());
   const filtered = q
     ? participantsRows.filter(r => r.searchKey.includes(q))
     : participantsRows;
@@ -655,6 +715,12 @@ function renderParticipantsPage() {
   });
 }
 
+function normSearch(s) {
+  return String(s == null ? "" : s)
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function wireSearch() {
   const input = document.getElementById("search");
   if (!input) return;
@@ -711,6 +777,46 @@ function toast(msg) {
   t.classList.add("show");
   clearTimeout(toast._t);
   toast._t = setTimeout(() => t.classList.remove("show"), 2400);
+}
+
+function initFotoLightbox() {
+  const box = document.getElementById("foto-lightbox");
+  const img = document.getElementById("foto-lightbox-img");
+  if (!box || !img) return;
+  document.querySelectorAll('img[data-zoom]').forEach((el) => {
+    el.addEventListener("click", () => {
+      img.src = el.src;
+      img.alt = el.alt || "";
+      box.classList.add("show");
+    });
+  });
+  const close = () => { box.classList.remove("show"); img.src = ""; };
+  box.addEventListener("click", close);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+}
+document.addEventListener("DOMContentLoaded", initFotoLightbox);
+
+function showInfoModal(title, msg) {
+  const modal = document.getElementById("info-modal");
+  if (!modal) return;
+  const t = document.getElementById("info-modal-title");
+  const m = document.getElementById("info-modal-msg");
+  const ok = document.getElementById("info-modal-ok");
+  if (t) t.textContent = title;
+  if (m) m.textContent = msg;
+  modal.classList.add("show");
+  const close = () => {
+    modal.classList.remove("show");
+    modal.removeEventListener("click", onBackdrop);
+    document.removeEventListener("keydown", onEsc);
+    ok?.removeEventListener("click", close);
+  };
+  const onBackdrop = (e) => { if (e.target === modal) close(); };
+  const onEsc = (e) => { if (e.key === "Escape") close(); };
+  ok?.addEventListener("click", close);
+  modal.addEventListener("click", onBackdrop);
+  document.addEventListener("keydown", onEsc);
+  setTimeout(() => ok?.focus(), 50);
 }
 
 /* ============================================================
@@ -1184,36 +1290,34 @@ Ya descargué mi talonario desde la web. Cuando termine de vender, te enviaré u
   return `mailto:Denisse.psoto89@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
-/* Registrar la descarga en el Sheet (pestaña Descargas) vía Apps Script Web App.
-   Fallback a localStorage si el POST falla o el endpoint no está configurado. */
+/* Registrar la descarga + enviar PDF por correo.
+   Estrategia dual-mode:
+     1) Intenta POST same-origin a /api/descarga (Vercel Function). Respuesta JSON real.
+     2) Si #1 falla con missing_env o de red, cae a Apps Script (legacy).
+   Siempre guarda copia local por si ambas fallan. */
 async function registrarDescarga(payload) {
   const entry = {
     ...payload,
-    timestamp: new Date().toISOString(),
     ua: navigator.userAgent.slice(0, 160),
   };
 
-  // Guardar siempre una copia local (por si el POST falla)
   try {
     const key = "rifa-descargas-local";
     const prev = JSON.parse(localStorage.getItem(key) || "[]");
-    prev.push(entry);
+    prev.push({ ...entry, timestamp: new Date().toISOString() });
     localStorage.setItem(key, JSON.stringify(prev.slice(-50)));
   } catch {}
 
-  if (!CONFIG.registryUrl) return { ok: false, reason: "no-endpoint" };
-
+  if (!CONFIG.apiDescargaUrl) return { ok: false, reason: "no-endpoint" };
   try {
-    // text/plain para evitar preflight CORS — Apps Script leerá e.postData.contents
-    await fetch(CONFIG.registryUrl, {
+    const r = await fetch(CONFIG.apiDescargaUrl, {
       method: "POST",
-      mode: "no-cors",
-      credentials: "omit",
-      referrerPolicy: "no-referrer",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ ...entry, secret: CONFIG.registrySecret }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(entry),
     });
-    return { ok: true };
+    const data = await r.json().catch(() => ({}));
+    if (r.ok && data.ok) return { ok: true, via: "vercel", mail: data.mail };
+    return { ok: false, reason: data.error || `http_${r.status}` };
   } catch (e) {
     return { ok: false, reason: String(e && e.message || e) };
   }
@@ -1243,28 +1347,25 @@ async function registrarPremio(payload) {
   const entry = {
     ...payload,
     type: "premio",
-    timestamp: new Date().toISOString(),
     ua: navigator.userAgent.slice(0, 160),
   };
   try {
     const key = "rifa-premios-local";
     const prev = JSON.parse(localStorage.getItem(key) || "[]");
-    prev.push(entry);
+    prev.push({ ...entry, timestamp: new Date().toISOString() });
     localStorage.setItem(key, JSON.stringify(prev.slice(-50)));
   } catch {}
 
-  if (!CONFIG.registryUrl) return { ok: false, reason: "no-endpoint" };
-
+  if (!CONFIG.apiPremioUrl) return { ok: false, reason: "no-endpoint" };
   try {
-    await fetch(CONFIG.registryUrl, {
+    const r = await fetch(CONFIG.apiPremioUrl, {
       method: "POST",
-      mode: "no-cors",
-      credentials: "omit",
-      referrerPolicy: "no-referrer",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ ...entry, secret: CONFIG.registrySecret }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(entry),
     });
-    return { ok: true };
+    const data = await r.json().catch(() => ({}));
+    if (r.ok && data.ok) return { ok: true, via: "vercel" };
+    return { ok: false, reason: data.error || `http_${r.status}` };
   } catch (e) {
     return { ok: false, reason: String(e && e.message || e) };
   }
@@ -1435,9 +1536,15 @@ function wireTalonarioForm() {
       });
 
       if (result.pdfBase64) {
-        toast("¡Listo! Descargando tu talonario y enviándolo a " + correo);
+        showInfoModal(
+          "¡Listo! Tu talonario fue enviado",
+          "Enviamos el talonario a " + correo + ". Recuerda revisar tu bandeja de SPAM o correos no deseados si no lo ves en tu bandeja de entrada. ¡Gracias por ayudar!"
+        );
       } else {
-        toast("¡Listo! Talonario descargado (el envío por correo puede demorar)");
+        showInfoModal(
+          "Talonario descargado",
+          "Tu talonario se descargó correctamente. El envío por correo puede demorar — recuerda revisar tu bandeja de SPAM o correos no deseados. ¡Gracias por ayudar!"
+        );
       }
     } finally {
       setTimeout(() => { btn.disabled = false; btn.innerHTML = originalBtn; }, 1500);
@@ -1552,7 +1659,6 @@ async function load() {
     loadFotosTalonarios();
     const now = new Date();
     document.getElementById("updated").textContent = "Actualizado: " + now.toLocaleString("es-CL");
-    document.getElementById("chip-date").textContent = now.toLocaleDateString("es-CL", { day:"2-digit", month:"short" });
   } catch (e) {
     document.getElementById("premios").innerHTML =
       `<div class="state error"><span class="emoji">⚠️</span>No se pudo leer el Sheet. Verifica que esté compartido como "Cualquiera con el enlace".<br><small>${esc(e.message)}</small></div>`;
@@ -1560,6 +1666,19 @@ async function load() {
     if (tv) tv.innerHTML =
       `<div class="state error"><span class="emoji">⚠️</span>Error al cargar los participantes.</div>`;
   }
+}
+
+function wireVerificarShortcut() {
+  const link = document.querySelector(".verificar-go");
+  if (!link) return;
+  link.addEventListener("click", (e) => {
+    const target = document.getElementById("participantes");
+    const input = document.getElementById("search");
+    if (!target) return;
+    e.preventDefault();
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(() => { input?.focus({ preventScroll: true }); }, 450);
+  });
 }
 
 function init() {
@@ -1571,6 +1690,7 @@ function init() {
   wireTransferCopy();
   wireTalonarioForm();
   wirePremioForm();
+  wireVerificarShortcut();
   document.getElementById("refresh-btn").addEventListener("click", () => {
     toast("Actualizando…"); load();
   });

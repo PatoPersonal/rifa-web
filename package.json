@@ -1,0 +1,11 @@
+{
+  "name": "rifa-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Rifa Paola Soto — web + backend Vercel Functions",
+  "dependencies": {
+    "nodemailer": "^6.9.16",
+    "google-auth-library": "^9.15.0"
+  }
+}

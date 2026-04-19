@@ -2,10 +2,14 @@
 // Evita el problema de CORS al llamar a docs.google.com/export desde el navegador
 // Y evita la inferencia de tipos de gviz (que descarta texto en columnas numéricas).
 
-const SHEET_ID = "1vLJyh4aALhtmrYLhXpPcTvuamV8VLMzZtsoIgH0xH5E";
 const ALLOWED_GIDS = new Set(["1574989954"]); // Numeros (agregar más si corresponde)
 
 export default async function handler(req, res) {
+  const SHEET_ID = (process.env.SHEET_ID || "").trim();
+  if (!SHEET_ID) {
+    res.status(500).json({ error: "sheet_no_configurado" });
+    return;
+  }
   const gid = String(req.query.gid || "").trim();
 
   if (!gid || !/^\d+$/.test(gid)) {
