@@ -337,6 +337,19 @@ function renderFotosTalonarios(rows) {
 }
 
 async function loadFotosTalonarios() {
+  // Preferido: /api/fotos lee directo de la carpeta Drive compartida con el service account.
+  try {
+    const res = await fetch("/api/fotos", { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.ok && Array.isArray(data.fotos) && data.fotos.length) {
+        renderFotosTalonarios(data.fotos);
+        return;
+      }
+    }
+  } catch { /* cae al fallback */ }
+
+  // Fallback: pestaña FotosTalonarios del Sheet (si alguien la mantiene manualmente).
   if (!CONFIG.fotosSheet) return;
   try {
     const rows = await fetchSheet(CONFIG.fotosSheet);

@@ -35,6 +35,7 @@ export function internalRecipients() {
 }
 
 let _sheetsAuthClient = null;
+let _driveAuthClient = null;
 
 async function getSheetsAccessToken() {
   if (!_sheetsAuthClient) {
@@ -49,6 +50,22 @@ async function getSheetsAccessToken() {
     _sheetsAuthClient = await auth.getClient();
   }
   const t = await _sheetsAuthClient.getAccessToken();
+  return typeof t === "string" ? t : (t && t.token) || null;
+}
+
+export async function getDriveAccessToken() {
+  if (!_driveAuthClient) {
+    const raw = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+    let creds;
+    try { creds = JSON.parse(raw); }
+    catch { throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY no es JSON válido"); }
+    const auth = new GoogleAuth({
+      credentials: creds,
+      scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+    });
+    _driveAuthClient = await auth.getClient();
+  }
+  const t = await _driveAuthClient.getAccessToken();
   return typeof t === "string" ? t : (t && t.token) || null;
 }
 
