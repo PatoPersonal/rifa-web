@@ -40,26 +40,54 @@ const CONFIG = {
 };
 
 // Precarga de la foto de portada de Paola como data URL para incrustar en el PDF.
-// Si falla (offline, etc.) el PDF se genera sin foto sin romper.
+// En iOS Safari el pipeline canvas → toDataURL a veces produce JPEGs que jsPDF
+// renderiza como rectángulo NEGRO (JPEG progresivo + bug de re-encode). Por eso
+// leemos el archivo binario directo con fetch + FileReader y dejamos jsPDF
+// incrustar el JPEG original sin tocarlo. Si falla, hay fallback con Image+canvas.
 let paolaImgDataUrl = null;
-(function preloadPaolaImg() {
+let paolaImgReady = null; // Promise que resuelve cuando el preload termina (ok o falló)
+paolaImgReady = (async function preloadPaolaImg() {
+  // 1. Intento principal: fetch del JPEG original → data URL sin re-encode.
   try {
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const maxSide = 400;
-        const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
-        const w = Math.round(img.naturalWidth * scale);
-        const h = Math.round(img.naturalHeight * scale);
-        const canvas = document.createElement("canvas");
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, w, h);
-        paolaImgDataUrl = canvas.toDataURL("image/jpeg", 0.85);
-      } catch (_) { paolaImgDataUrl = null; }
-    };
-    img.onerror = () => { paolaImgDataUrl = null; };
-    img.src = "paola.jpg";
+    const resp = await fetch("paola.jpg", { cache: "force-cache" });
+    if (resp.ok) {
+      const blob = await resp.blob();
+      const dataUrl = await new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = () => reject(fr.error);
+        fr.readAsDataURL(blob);
+      });
+      if (dataUrl && dataUrl.startsWith("data:image/")) {
+        paolaImgDataUrl = dataUrl;
+        return;
+      }
+    }
+  } catch (_) { /* cae al fallback */ }
+
+  // 2. Fallback: Image → canvas → toDataURL (solo si el fetch falló).
+  try {
+    await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const maxSide = 400;
+          const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+          const w = Math.max(1, Math.round(img.naturalWidth * scale));
+          const h = Math.max(1, Math.round(img.naturalHeight * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          paolaImgDataUrl = canvas.toDataURL("image/jpeg", 0.9);
+        } catch (_) { paolaImgDataUrl = null; }
+        resolve();
+      };
+      img.onerror = () => { paolaImgDataUrl = null; resolve(); };
+      img.src = "paola.jpg";
+    });
   } catch (_) { /* no-op */ }
 })();
 
@@ -769,11 +797,21 @@ function wireTransferCopy() {
 /* ============================================================
    Solicitar talonario — PDF + email
    ============================================================ */
-function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
+async function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
   const { jsPDF } = window.jspdf || {};
   if (!jsPDF) {
     toast("No se pudo cargar el generador de PDF. Intenta de nuevo.");
     return false;
+  }
+  // Esperar el preload de la foto (máx ~4s) antes de generar el PDF, así evitamos
+  // talonarios sin foto o con foto negra en iPhone por preload incompleto.
+  if (paolaImgReady) {
+    try {
+      await Promise.race([
+        paolaImgReady,
+        new Promise((resolve) => setTimeout(resolve, 4000)),
+      ]);
+    } catch (_) { /* seguimos sin foto si falla */ }
   }
   const N = Math.max(1, Number(CONFIG.numerosPorRifa) || 15);
   const codes = Array.isArray(codigos) && codigos.length ? codigos : [];
@@ -1092,13 +1130,29 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
   const safeNombre = nombre.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s-]/g, "").trim().replace(/\s+/g, "_");
   const filename = `Talonario_Rifa_Paola_${safeNombre || "vendedor"}.pdf`;
 
-  // Extrae base64 ANTES de guardar (algunos navegadores invalidan el doc tras save)
+  // Extrae base64 ANTES de guardar. Algunos navegadores (iOS Safari) invalidan
+  // el doc o devuelven un datauristring truncado. Probamos 2 rutas:
+  //   1) output("datauristring") → split.
+  //   2) fallback: output("blob") → FileReader.readAsDataURL.
   let pdfBase64 = "";
   try {
     const datauri = doc.output("datauristring");
     pdfBase64 = (datauri.split(",")[1] || "").trim();
-  } catch (e) {
-    pdfBase64 = "";
+  } catch (_) { pdfBase64 = ""; }
+
+  if (!pdfBase64) {
+    try {
+      const blob = doc.output("blob");
+      pdfBase64 = await new Promise((resolve) => {
+        const fr = new FileReader();
+        fr.onload = () => {
+          const s = String(fr.result || "");
+          resolve((s.split(",")[1] || "").trim());
+        };
+        fr.onerror = () => resolve("");
+        fr.readAsDataURL(blob);
+      });
+    } catch (_) { /* queda vacío */ }
   }
 
   doc.save(filename);
@@ -1363,7 +1417,7 @@ function wireTalonarioForm() {
     try {
       const codes = generarCodigosTalonarios(nombre, cantidad);
 
-      const result = buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos: codes });
+      const result = await buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos: codes });
       if (!result || !result.ok) { btn.disabled = false; btn.innerHTML = originalBtn; return; }
 
       // Registrar + mandar PDF por correo (vía Apps Script) — no bloqueante si falla
@@ -1380,7 +1434,11 @@ function wireTalonarioForm() {
         }
       });
 
-      toast("¡Listo! Descargando tu talonario y enviándolo por correo…");
+      if (result.pdfBase64) {
+        toast("¡Listo! Descargando tu talonario y enviándolo a " + correo);
+      } else {
+        toast("¡Listo! Talonario descargado (el envío por correo puede demorar)");
+      }
     } finally {
       setTimeout(() => { btn.disabled = false; btn.innerHTML = originalBtn; }, 1500);
     }
