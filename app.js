@@ -823,9 +823,7 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     doc.setFont("helvetica", "bold"); doc.setFontSize(22);
     doc.text("RIFA PAOLA SOTO", ML, 34);
     doc.setFont("helvetica", "normal"); doc.setFontSize(10.5);
-    doc.text("Por su recuperacion - gracias por apoyarla", ML, 52);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5);
-    doc.text("Web oficial: rifa-paolasoto.vercel.app", ML, 68);
+    doc.text("Por su recuperacion - gracias por apoyarla", ML, 54);
     doc.setFont("helvetica", "bold"); doc.setFontSize(15);
     doc.text(`Talonario ${fixText(codigo)}`, PW - MR, 34, { align: "right" });
     doc.setFont("helvetica", "bold"); doc.setFontSize(10);
@@ -833,12 +831,21 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     doc.setFontSize(9); doc.setFont("helvetica", "normal");
     doc.text(`Hoja ${k + 1} de ${cantidad}`, PW - MR, 64, { align: "right" });
 
-    // Info vendedor (caja)
+    // ========================================================
+    // Top section: info vendedor (izq) + card con foto Paola (der)
+    // ========================================================
+    const PURPLE_DARK = [76, 29, 149];  // violet-800
     doc.setTextColor(...TEXT);
     let y = 96;
+    const topH = 72;
+    const photoCardW = 132;
+    const topGap = 14;
+    const vendedorW = CW - photoCardW - topGap;
+
+    // -- Caja vendedor (izq) --
     doc.setFillColor(250, 248, 255);
     doc.setDrawColor(...BORDER);
-    doc.roundedRect(ML, y, CW, 72, 6, 6, "FD");
+    doc.roundedRect(ML, y, vendedorW, topH, 6, 6, "FD");
     doc.setFont("helvetica", "bold"); doc.setFontSize(10);
     doc.setTextColor(...MUTED);
     doc.text("A CARGO DE", ML + 12, y + 16);
@@ -852,13 +859,29 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     doc.setTextColor(...PURPLE);
     doc.text(`${cantidad} talonario(s)  -  ${cantidad * N} numeros  -  $1.000 c/u`, ML + 12, y + 64);
 
-    // Premios (dos columnas: lista a la izquierda + caja destacada "y muchos mas" a la derecha)
-    y += 84;
-    const premiosStartY = y;
-    const leftColW = Math.floor(CW * 0.6);
-    const rightColX = ML + leftColW + 14;
-    const rightColW = CW - leftColW - 14;
+    // -- Card foto Paola (der) --
+    const photoCardX = ML + vendedorW + topGap;
+    doc.setFillColor(...PURPLE_DARK);
+    doc.roundedRect(photoCardX, y, photoCardW, topH, 8, 8, "F");
+    const photoSize = 46;
+    const photoX = photoCardX + (photoCardW - photoSize) / 2;
+    const photoY = y + 6;
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(photoX - 2.5, photoY - 2.5, photoSize + 5, photoSize + 5, 5, 5, "F");
+    if (paolaImgDataUrl) {
+      try {
+        doc.addImage(paolaImgDataUrl, "JPEG", photoX, photoY, photoSize, photoSize);
+      } catch (_) { /* si falla queda el marco */ }
+    }
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255);
+    doc.text("PAOLA SOTO", photoCardX + photoCardW / 2, photoY + photoSize + 12, { align: "center" });
+    doc.setTextColor(...TEXT);
 
+    // ========================================================
+    // Premios: lista completa (full width)
+    // ========================================================
+    y += topH + 14;
     doc.setFont("helvetica", "bold"); doc.setFontSize(11);
     doc.setTextColor(...TEXT);
     doc.text("PREMIOS", ML, y);
@@ -870,14 +893,17 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
 
     doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
     doc.setTextColor(...TEXT);
-    const premiosAListar = lastPremios.length ? lastPremios.slice(0, 5) : [];
+    // Todos los premios disponibles en ese momento. Si son muchos, los textos se ajustan.
+    const premiosAListar = Array.isArray(lastPremios) ? lastPremios : [];
+    // Con layout full-width caben ~95 chars por linea a 9.5pt helvetica.
+    const premiosWrap = premiosAListar.length > 7 ? 95 : 100;
     if (premiosAListar.length) {
       premiosAListar.forEach((p, i) => {
-        const lugar = fixText(p.lugar || `${i + 1}°`);
+        const lugar = fixText(p.lugar || `${i + 1}\u00B0`);
         const nombrePremio = fixText(p.nombre || p.descripcion || p.premio || "Premio");
         const desc = p.descripcion && p.nombre ? ` - ${fixText(p.descripcion)}` : "";
         const linea = `${lugar}  ${nombrePremio}${desc}`;
-        const lineas = wrap(linea, 55);
+        const lineas = wrap(linea, premiosWrap);
         lineas.forEach((ln, idx) => {
           if (idx === 0) {
             doc.setFont("helvetica", "bold");
@@ -896,47 +922,21 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
       y += 12;
     }
 
-    // Caja destacada a la derecha: foto de Paola + "¡Y MUCHOS PREMIOS MÁS!"
-    // Color oscuro para buen contraste en impresión B&W (fondo se ve gris oscuro,
-    // texto blanco se lee bien).
-    const PURPLE_DARK = [76, 29, 149];  // violet-800 — imprime ~gris oscuro
-    const premiosEndY = y;
-    const pBoxTop = premiosStartY - 4;
-    const pBoxH = Math.max(premiosEndY - pBoxTop, 140);
-    // Caja principal — violeta oscuro (alto contraste B&W)
-    doc.setFillColor(...PURPLE_DARK);
-    doc.roundedRect(rightColX, pBoxTop, rightColW, pBoxH, 10, 10, "F");
-
-    // Foto de Paola en la parte superior de la caja
-    const photoSize = 58;
-    const photoX = rightColX + (rightColW - photoSize) / 2;
-    const photoY = pBoxTop + 12;
-    // Marco blanco detrás de la foto (se ve bien en color y en B&W)
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(photoX - 3, photoY - 3, photoSize + 6, photoSize + 6, 6, 6, "F");
-    if (paolaImgDataUrl) {
-      try {
-        doc.addImage(paolaImgDataUrl, "JPEG", photoX, photoY, photoSize, photoSize);
-      } catch (_) { /* si falla, queda el marco blanco vacío */ }
-    }
-
-    // Texto "¡Y MUCHOS PREMIOS MÁS!" bajo la foto
-    const textStartY = photoY + photoSize + 22;
+    // Callout final "¡Y MUCHOS PREMIOS MÁS!" como píldora morada al pie del listado
+    y += 6;
+    const calloutH = 24;
+    doc.setFillColor(...PURPLE);
+    doc.roundedRect(ML, y, CW, calloutH, 12, 12, "F");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(11);
     doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(13);
-    doc.text("\u00A1Y MUCHOS", rightColX + rightColW / 2, textStartY, { align: "center" });
-    doc.text("PREMIOS M\u00C1S!", rightColX + rightColW / 2, textStartY + 14, { align: "center" });
-
-    // URL abajo
-    doc.setFont("helvetica", "normal"); doc.setFontSize(7.5);
-    doc.text("Lista completa en:", rightColX + rightColW / 2, pBoxTop + pBoxH - 15, { align: "center" });
-    doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
-    doc.text("rifa-paolasoto.vercel.app", rightColX + rightColW / 2, pBoxTop + pBoxH - 5, { align: "center" });
+    doc.text("\u00A1Y MUCHOS PREMIOS M\u00C1S!  \u2022  Lista completa en rifa-paolasoto.vercel.app",
+      ML + CW / 2, y + 15.5, { align: "center" });
     doc.setTextColor(...TEXT);
+    y += calloutH + 12;
 
-    // Tabla de números — SIEMPRE 1 a 15. Fuerza y por debajo de la caja morada
-    // para evitar que la tabla se sobreponga con la caja "¡Y MUCHOS PREMIOS MÁS!".
-    y = Math.max(y, pBoxTop + pBoxH) + 14;
+    // ========================================================
+    // Tabla de números — SIEMPRE 1 a 15
+    // ========================================================
     doc.setFont("helvetica", "bold"); doc.setFontSize(11);
     doc.setTextColor(...TEXT);
     doc.text(`TUS NUMEROS (01 al ${String(N).padStart(2, "0")})`, ML, y);
@@ -945,7 +945,8 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     doc.text("Completa el nombre y telefono de cada comprador", ML + 230, y);
     y += 8;
 
-    const rowH = 18;
+    // Ajusta altura de fila segun cuantos premios se listaron, para que el pie quepa.
+    const rowH = premiosAListar.length > 6 ? 16 : 18;
     const colX = [ML, ML + 40, ML + 250, ML + 450];
     const colW = [40, 210, 200, CW - 450];
 
