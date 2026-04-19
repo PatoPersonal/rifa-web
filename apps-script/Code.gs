@@ -78,6 +78,13 @@ var REMITENTE_NOMBRE = "Rifa Paola Soto";
 // INTERNOS — no editar salvo que sepas lo que haces
 // ============================================================
 
+// ID del Sheet (funciona tanto si el script es bound como standalone)
+var SPREADSHEET_ID = "1vLJyh4aALhtmrYLhXpPcTvuamV8VLMzZtsoIgH0xH5E";
+
+function _openSheet() {
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
+}
+
 var SHEET_NAME = "Descargas";
 var HEADERS = ["fecha", "nombre", "correo", "telefono", "cantidad", "codigos", "desde", "hasta", "ua", "mail"];
 
@@ -181,7 +188,7 @@ function _handlePremio(data) {
 }
 
 function _getOrCreatePremiosSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = _openSheet();
   var sheet = ss.getSheetByName(PREMIOS_SHEET);
   if (!sheet) sheet = ss.insertSheet(PREMIOS_SHEET);
   if (sheet.getLastRow() === 0) {
@@ -353,7 +360,7 @@ function _sendAlertaInterna(p, rangoTxt) {
 }
 
 function _getOrCreateSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = _openSheet();
   var sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
   if (sheet.getLastRow() === 0) {
