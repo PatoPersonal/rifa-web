@@ -336,10 +336,11 @@ function _sendTalonarioEmail(p) {
 
   MailApp.sendEmail(p.correo, subject, plain, opts);
 
-  // Además, enviar alerta interna estructurada a Pato y Coni (sin PDF, sin BCC al participante).
-  // Esto asegura que tengan siempre un registro claro aunque el correo principal quede en spam.
+  // Además, enviar alerta interna estructurada a Deny + Pato + Coni con el PDF
+  // adjunto. Esto garantiza que Deny reciba la copia del talonario aunque el
+  // correo al participante (donde está en CC) se pierda o filtre.
   try {
-    _sendAlertaInterna(p, rangoTxt);
+    _sendAlertaInterna(p, rangoTxt, pdfBlob);
   } catch (alertErr) {
     // No bloquea el flujo si la alerta falla
   }
@@ -347,10 +348,15 @@ function _sendTalonarioEmail(p) {
   return "ok (cc: " + (cc || "—") + ", bcc: " + (bccList.join(",") || "—") + ")";
 }
 
-// Alerta interna privada: Pato + Coni reciben un resumen estructurado de la descarga.
-// Separada del correo al participante para que no se pierda entre otros mensajes.
-function _sendAlertaInterna(p, rangoTxt) {
-  var tos = [_getEmailPato(), _getEmailConi()].filter(function (x) { return x && x.trim(); });
+// Alerta interna: Deny + Pato + Coni reciben un resumen estructurado de la
+// descarga. Separada del correo al participante para que no se pierda entre
+// otros mensajes. Deny recibe la alerta aunque ya esté en CC del mail al
+// participante, para asegurar visibilidad del evento.
+function _sendAlertaInterna(p, rangoTxt, pdfBlob) {
+  var correoLower = (p.correo || "").toLowerCase();
+  var tos = [EMAIL_DENY, _getEmailPato(), _getEmailConi()]
+    .filter(function (x) { return x && x.trim(); })
+    .filter(function (x) { return x.toLowerCase() !== correoLower; });
   if (!tos.length) return;
 
   var telDigits = (p.telefono || "").replace(/[^+\d]/g, "");
@@ -368,7 +374,7 @@ function _sendAlertaInterna(p, rangoTxt) {
         (rangoTxt ? '<tr><td style="padding:4px 10px 4px 0;color:#64748b;">Rango:</td><td style="padding:4px 0;">' + _escHtml(rangoTxt) + '</td></tr>' : '') +
         (p.codigos ? '<tr><td style="padding:4px 10px 4px 0;color:#64748b;">Códigos:</td><td style="padding:4px 0;font-family:monospace;">' + _escHtml(p.codigos) + '</td></tr>' : '') +
       '</table>' +
-      '<p style="font-size:12px;color:#94a3b8;margin-top:16px;">El participante recibió el PDF por correo con Deny en CC. Este aviso es privado para registro interno.</p>' +
+      '<p style="font-size:12px;color:#94a3b8;margin-top:16px;">El PDF del talonario va adjunto a este aviso. El participante también recibió su copia por correo.</p>' +
     '</div>';
 
   var plain =
@@ -379,13 +385,16 @@ function _sendAlertaInterna(p, rangoTxt) {
     "Cantidad: " + p.cantidad + " talonario(s) (" + (p.cantidad * 15) + " números)\n" +
     (rangoTxt ? ("Rango: " + rangoTxt + "\n") : "") +
     (p.codigos ? ("Códigos: " + p.codigos + "\n") : "") +
-    "\nEl participante ya recibió el PDF por correo con Deny en CC.";
+    "\nEl PDF del talonario va adjunto para tu registro.";
 
-  MailApp.sendEmail(tos.join(","), subject, plain, {
+  var alertOpts = {
     htmlBody: html,
     name: REMITENTE_NOMBRE,
     replyTo: p.correo,
-  });
+  };
+  if (pdfBlob) alertOpts.attachments = [pdfBlob];
+
+  MailApp.sendEmail(tos.join(","), subject, plain, alertOpts);
 }
 
 function _getOrCreateSheet() {
