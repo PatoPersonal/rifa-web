@@ -45,30 +45,39 @@ Abre tu Google Sheet:
 
 ---
 
-## 3. Configurar `index.html`
+## 3. Configurar `app.js`
 
-Abre `index.html` y edita el bloque `CONFIG` al inicio del `<script>`:
+Abre `app.js` y edita el bloque `CONFIG` al inicio:
 
 ```js
 const CONFIG = {
   titulo: "Gran Rifa",
-  subtitulo: "Números pagados, premios y toda la info del sorteo — actualizado en vivo.",
-  sheetId: "1vLJyh4aALhtmrYLhXpPcTvuamV8VLMzZtsoIgH0xH5E",
-  numerosSheet: "Numeros",   // nombre exacto de la pestaña
-  premiosSheet: "Premios",   // nombre exacto de la pestaña (o "" si no existe)
-  totalNumeros: 100,         // total de números de la rifa
-  adminKey: "rifa2026",      // ⚠️ cámbialo antes de subir a Vercel
-  autoRefreshMs: 60000,      // refresco automático cada 60s
+  subtitulo: "...",
+  sheetId: "TU_SHEET_ID",
+  numerosSheet: "Numeros",
+  numerosSheetGid: "TU_GID",      // GID de la pestaña para el proxy /api/sheet
+  premiosSheet: "Premios",
+  rifasCount: 15,
+  numerosPorRifa: 15,
+  adminKeyHash: "SHA256_DE_TU_CLAVE",
+  registryUrl: "URL_DEL_APPS_SCRIPT_EXEC",
+  registrySecret: "string-aleatorio-propio",
+  autoRefreshMs: 60000,
 };
 ```
 
-> Los nombres de pestaña son **case-sensitive**. Si la tuya se llama "Números" (con tilde) o "numeros" (minúsculas), cópialo tal cual.
+**Generar el hash de la clave admin** (nunca guardes la clave en texto plano):
+```bash
+node -e "console.log(require('crypto').createHash('sha256').update('TU_CLAVE_SECRETA').digest('hex'))"
+```
+
+> Los nombres de pestaña son **case-sensitive**. Copialos tal cual del Sheet.
 
 ---
 
 ## 4. Panel admin
 
-Accede a `https://tu-dominio.com/?admin=rifa2026` (usando la `adminKey` que configuraste).
+Accede a `https://tu-dominio.com/?admin=TU_CLAVE` (la clave real, no el hash).
 
 El panel muestra:
 - Números libres listados

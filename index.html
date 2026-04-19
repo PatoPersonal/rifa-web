@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='78' font-size='80'>🎟️</text></svg>">
+<script src="jspdf.umd.min.js" defer></script>
 <style>
   :root {
     --bg: #f5f3ff;
@@ -374,6 +375,22 @@
   }
   .stat-num { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
   .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+  .cta-stat {
+    display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+    text-decoration: none; color: #fff !important;
+    background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+    border: none; cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .cta-stat:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(124,58,237,0.25); }
+  .cta-stat .stat-num { font-size: 28px; color: #fff; }
+  .cta-stat .stat-label {
+    color: rgba(255,255,255,0.95); font-weight: 700; text-transform: none;
+    letter-spacing: 0; font-size: 13px; line-height: 1.3; margin-top: 2px;
+  }
+  .cta-stat .cta-sub {
+    color: rgba(255,255,255,0.85); font-size: 11px; margin-top: 4px; font-weight: 500;
+  }
   .progress-bar { height: 8px; background: var(--free); border-radius: 99px; overflow: hidden; margin-top: 10px; }
   .progress-bar > span { display: block; height: 100%; background: var(--gradient); transition: width .8s ease; border-radius: 99px; }
 
@@ -481,6 +498,84 @@
   [data-theme="dark"] .num-badge { color: #86efac; }
   .num-badge.pending { background: rgba(245,158,11,.18); color: #b45309; }
   [data-theme="dark"] .num-badge.pending { color: #fbbf24; }
+
+  /* ───── Grid por talonario ───── */
+  .talonarios-grid-host { margin: 16px 0; display: grid; gap: 14px; }
+  .tg-card {
+    border: 1px solid var(--border); border-radius: 14px;
+    background: var(--card); padding: 14px 14px 16px;
+  }
+  .tg-header {
+    display: flex; flex-wrap: wrap; align-items: baseline;
+    gap: 8px 14px; margin-bottom: 10px;
+  }
+  .tg-code { font-size: 14px; color: var(--muted); }
+  .tg-code strong {
+    color: var(--brand); font-size: 16px; font-weight: 800;
+    background: rgba(124,58,237,0.10);
+    padding: 2px 10px; border-radius: 8px; margin-left: 4px;
+    letter-spacing: .04em;
+  }
+  .tg-vendedor {
+    font-size: 13px; color: var(--text); font-weight: 600;
+  }
+  .tg-vendedor::before { content: "👤 "; }
+  .tg-counts { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .tg-count.paid { color: var(--paid); font-weight: 700; }
+  .tg-count.reserved { color: #b45309; font-weight: 700; }
+  [data-theme="dark"] .tg-count.paid { color: #86efac; }
+  [data-theme="dark"] .tg-count.reserved { color: #fbbf24; }
+  .tg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 42px);
+    gap: 6px;
+    justify-content: start;
+  }
+  .tg-cell {
+    width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; font-size: 13px; font-weight: 700;
+    border: 1px solid var(--border);
+    background: var(--bg-soft); color: var(--muted);
+    user-select: none; cursor: default;
+    transition: transform .1s;
+  }
+  .tg-cell:hover { transform: translateY(-1px); }
+  .tg-cell.paid { background: var(--paid-bg); color: var(--paid); border-color: transparent; }
+  [data-theme="dark"] .tg-cell.paid { color: #86efac; }
+  .tg-cell.reserved { background: rgba(245,158,11,.18); color: #b45309; border-color: transparent; }
+  [data-theme="dark"] .tg-cell.reserved { color: #fbbf24; }
+  @media (max-width: 560px) {
+    .tg-grid { grid-template-columns: repeat(5, 1fr); }
+    .tg-counts { margin-left: 0; flex-basis: 100%; }
+  }
+
+  /* ───── Paginador de participantes ───── */
+  .pager {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-top: 14px; flex-wrap: wrap;
+  }
+  .pager-info {
+    font-size: 13px; color: var(--muted); text-align: center;
+    flex: 1 1 auto; min-width: 0;
+  }
+  .pager-info strong { color: var(--text); }
+  .pager-btn {
+    appearance: none; border: 1px solid var(--border); background: var(--card);
+    color: var(--text); font: inherit; font-weight: 600; font-size: 13px;
+    padding: 8px 14px; border-radius: 10px; cursor: pointer;
+    transition: background .15s, border-color .15s, transform .05s;
+  }
+  .pager-btn:hover:not(:disabled) { background: var(--bg-soft); border-color: var(--brand); }
+  .pager-btn:active:not(:disabled) { transform: translateY(1px); }
+  .pager-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .pager-summary {
+    margin-top: 12px; text-align: center; font-size: 13px; color: var(--muted);
+  }
+  @media (max-width: 560px) {
+    .pager { justify-content: center; }
+    .pager-info { order: 3; flex-basis: 100%; }
+    .pager-btn { flex: 1 1 auto; min-width: 44%; }
+  }
 
   /* ───── States ───── */
   .state { text-align: center; color: var(--muted); padding: 28px 16px; font-size: 14px; }
@@ -638,6 +733,201 @@
     .num-grid { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px; }
     .rifas-grid { grid-template-columns: 1fr; }
   }
+
+  /* ───── Talonario self-signup ───── */
+  .talonario-card {
+    background:
+      radial-gradient(600px 300px at 100% 0%, rgba(245,158,11,0.08), transparent 60%),
+      var(--card);
+  }
+  .talonario-intro {
+    margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height: 1.6;
+  }
+  .talonario-intro strong { color: var(--text); }
+  .talonario-form {
+    display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px;
+    align-items: end;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .talonario-form label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--muted); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .talonario-form .hint {
+    font-size: 12px; color: var(--muted); margin-top: 6px;
+  }
+  .talonario-form input[type="number"]::-webkit-outer-spin-button,
+  .talonario-form input[type="number"]::-webkit-inner-spin-button {
+    opacity: 1;
+  }
+  .talonario-form input,
+  .talonario-form select,
+  .talonario-form textarea {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid var(--border-strong); border-radius: 10px;
+    background: var(--card); color: var(--text);
+    font-size: 14px; font-family: inherit;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .talonario-form textarea {
+    resize: vertical; min-height: 70px; line-height: 1.5;
+  }
+  .talonario-form input:focus,
+  .talonario-form select:focus,
+  .talonario-form textarea:focus {
+    outline: none; border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+  }
+  .talonario-form .premio-full { grid-column: 1 / -1; }
+  .talonario-form .btn-primary {
+    padding: 10px 18px; white-space: nowrap;
+    border: none; cursor: pointer; border-radius: 10px;
+    font-weight: 700; font-size: 14px;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .talonario-steps {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px; margin-top: 16px;
+  }
+  .talonario-step {
+    padding: 14px; border: 1px solid var(--border); border-radius: 12px;
+    background: var(--card); font-size: 13px; line-height: 1.55;
+  }
+  .talonario-step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--gradient); color: #fff;
+    font-size: 12px; font-weight: 700; margin-right: 6px;
+  }
+  .talonario-step strong { color: var(--text); }
+  .talonario-contact {
+    margin: 14px 0 0; padding: 12px 14px;
+    background: rgba(124,58,237,0.08); border-left: 3px solid var(--brand);
+    border-radius: 8px; font-size: 13px; color: var(--muted); line-height: 1.6;
+  }
+  .talonario-contact strong { color: var(--text); }
+  .fotos-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .foto-talonario {
+    position: relative; overflow: hidden; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--bg-soft);
+    aspect-ratio: 3/4;
+  }
+  .foto-talonario img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform .3s ease;
+  }
+  .foto-talonario:hover img { transform: scale(1.03); }
+  .foto-talonario .foto-label {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 10px 12px;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    color: #fff; font-size: 12px; font-weight: 700;
+  }
+  .fotos-empty {
+    text-align: center; padding: 32px 20px;
+    background: var(--bg-soft); border: 1px dashed var(--border);
+    border-radius: 14px; color: var(--muted); line-height: 1.55;
+  }
+  .fotos-empty-icon { font-size: 40px; margin-bottom: 8px; }
+  .fotos-empty-sub { font-size: 13px; margin-top: 8px; max-width: 520px; margin-left: auto; margin-right: auto; }
+  .fotos-empty strong { color: var(--text); }
+  .talonarios-strip {
+    display: flex; flex-direction: column; gap: 8px;
+    margin-bottom: 18px;
+  }
+  .talonarios-strip:empty { display: none; }
+  .talonario-row {
+    display: grid; grid-template-columns: 46px 1fr auto auto; align-items: center; gap: 12px;
+    padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--card); font-size: 13.5px;
+  }
+  .talonario-row .t-num {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--gradient); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 14px;
+  }
+  .talonario-row .t-owner { color: var(--text); }
+  .talonario-row .t-owner strong { font-weight: 700; }
+  .talonario-row .t-owner .t-sub { font-size: 12px; color: var(--muted); }
+  .talonario-row .t-progress {
+    font-variant-numeric: tabular-nums; font-weight: 700; color: var(--brand);
+    font-size: 13px;
+  }
+  .talonario-row .t-bar {
+    width: 80px; height: 6px; border-radius: 3px; background: var(--bg-soft);
+    overflow: hidden; border: 1px solid var(--border);
+  }
+  .talonario-row .t-bar > span {
+    display: block; height: 100%;
+    background: var(--gradient); transition: width .3s ease;
+  }
+  @media (max-width: 620px) {
+    .talonario-row { grid-template-columns: 38px 1fr auto; }
+    .talonario-row .t-bar { display: none; }
+  }
+  .disclaimer-box {
+    margin: 14px 0 18px; padding: 16px 18px;
+    background: linear-gradient(135deg, rgba(124,58,237,0.05), rgba(236,72,153,0.04));
+    border: 1px solid rgba(124,58,237,0.2);
+    border-radius: 14px; font-size: 14px; line-height: 1.6; color: var(--text);
+  }
+  .disclaimer-title {
+    font-weight: 800; font-size: 15px; color: var(--brand);
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .disclaimer-list {
+    margin: 0 0 12px 0; padding-left: 20px;
+  }
+  .disclaimer-list li { margin-bottom: 10px; }
+  .disclaimer-list li:last-child { margin-bottom: 0; }
+  .disclaimer-list strong { color: var(--brand); }
+  .disclaimer-list em { color: var(--muted); font-style: normal; font-weight: 600; }
+  .disclaimer-warn {
+    margin-top: 12px; padding: 12px 14px;
+    background: rgba(245,158,11,0.08); border-left: 4px solid #f59e0b;
+    border-radius: 8px; font-size: 13px; line-height: 1.55; color: var(--text);
+  }
+  .disclaimer-warn strong { color: #b45309; }
+  .anti-fraude {
+    margin: 4px 0 18px; padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(236,72,153,0.06));
+    border: 1px solid rgba(124,58,237,0.25);
+    border-left: 4px solid var(--brand);
+    border-radius: 12px; font-size: 13.5px; line-height: 1.65; color: var(--text);
+  }
+  .anti-fraude strong { color: var(--brand); }
+  .descargas-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  .descargas-table th, .descargas-table td {
+    padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .descargas-table th {
+    font-weight: 700; color: var(--muted); text-transform: uppercase;
+    font-size: 11px; letter-spacing: 0.5px;
+  }
+  .descargas-table tr:hover td { background: var(--bg-soft); }
+  .descargas-empty {
+    padding: 20px; text-align: center; color: var(--muted);
+    background: var(--bg-soft); border-radius: 10px; font-size: 14px;
+  }
+  @media (max-width: 620px) {
+    .talonario-form { grid-template-columns: 1fr; }
+    .talonario-form .btn-primary { width: 100%; justify-content: center; }
+    .descargas-table th:nth-child(4), .descargas-table td:nth-child(4),
+    .descargas-table th:nth-child(5), .descargas-table td:nth-child(5) {
+      display: none;
+    }
+  }
 </style>
 </head>
 <body>
@@ -711,14 +1001,42 @@
           <a href="paola-rec-07.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-07.jpg" alt="Paola en recuperación" loading="lazy"></a>
           <a href="paola-rec-08.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-08.jpg" alt="Paola en recuperación" loading="lazy"></a>
           <a href="paola-rec-09.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-09.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-10.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-10.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-11.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-11.jpg" alt="Paola volviendo a pintarse los labios" loading="lazy"></a>
+          <a href="paola-rec-12.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-12.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-13.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-13.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-14.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-14.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-15.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-15.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-16.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-16.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-17.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-17.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-18.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-18.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-19.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-19.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-20.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-20.jpg" alt="Paola en recuperación" loading="lazy"></a>
+          <a href="paola-rec-21.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-21.jpg" alt="Paola en UCI" loading="lazy"></a>
+          <a href="paola-rec-22.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-22.jpg" alt="Paola en UCI" loading="lazy"></a>
+          <a href="paola-rec-23.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-23.jpg" alt="Paola post derrame" loading="lazy"></a>
+          <a href="paola-rec-24.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-rec-24.jpg" alt="Paola recuperando fuerzas" loading="lazy"></a>
         </div>
 
         <h3 class="gallery-heading">👨‍👩‍👧‍👦 La familia acompañándola</h3>
-        <p class="gallery-note">Constanza, Denny, José y Anto — el amor que la sostiene cada día.</p>
+        <p class="gallery-note">Coni, Denny, Jose y Anto — el amor que la sostiene cada día. Además, gracias a toda la familia que la ha acompañado en visitas y con su amor todos los días. 💜</p>
         <div class="gallery-grid">
           <a href="paola-fam-01.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-01.jpg" alt="Familia con Paola" loading="lazy"></a>
           <a href="paola-fam-02.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-02.jpg" alt="Familia con Paola" loading="lazy"></a>
           <a href="paola-fam-03.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-03.jpg" alt="Familia con Paola" loading="lazy"></a>
+          <a href="paola-fam-04.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-04.jpg" alt="Familia con Paola" loading="lazy"></a>
+          <a href="paola-fam-05.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-05.jpg" alt="Familia con Paola" loading="lazy"></a>
+          <a href="paola-fam-06.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-06.jpg" alt="Familia con Paola" loading="lazy"></a>
+          <a href="paola-fam-07.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-07.jpg" alt="Paola con su familia" loading="lazy"></a>
+          <a href="paola-fam-08.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-08.jpg" alt="Paola con sus hijos" loading="lazy"></a>
+          <a href="paola-fam-09.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-09.jpg" alt="Paola con su nieta" loading="lazy"></a>
+          <a href="paola-fam-10.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-10.jpg" alt="Paola con sus nietos" loading="lazy"></a>
+          <a href="paola-fam-11.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-11.jpg" alt="Paola con su mamá" loading="lazy"></a>
+          <a href="paola-fam-12.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-12.jpg" alt="Paola con su mamá" loading="lazy"></a>
+          <a href="paola-fam-13.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-13.jpg" alt="Paola con su papá" loading="lazy"></a>
+          <a href="paola-fam-14.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-14.jpg" alt="Paola con su tía Mena" loading="lazy"></a>
+          <a href="paola-fam-15.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-15.jpg" alt="Paola siendo mamita" loading="lazy"></a>
+          <a href="paola-fam-16.jpg" target="_blank" rel="noopener noreferrer" class="gallery-item"><img src="paola-fam-16.jpg" alt="Familia unida en amor" loading="lazy"></a>
         </div>
       </div>
     </details>
@@ -737,7 +1055,7 @@
         <div class="transfer-org">
           <div>
             <div class="org-name">Paola Soto</div>
-            <div class="org-role">Organizan: Constanza, Denny, José y Anto — sus hija/os que la aman ❤️</div>
+            <div class="org-role">Organizan: Coni, Denny, Jose y Anto — sus hija/os que la aman ❤️</div>
           </div>
         </div>
         <div class="price-badge">
@@ -776,6 +1094,103 @@
     </div>
   </section>
 
+  <!-- Solicitar talonario para vender -->
+  <section class="card talonario-card" id="pedir-talonario">
+    <button type="button" class="sec-head collapsible-toggle" id="pedir-talonario-toggle" aria-expanded="false" aria-controls="pedir-talonario-body" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <h2 style="margin:0;">📋 ¿Te animas a vender un talonario?</h2>
+        <div class="sub">Ayúdanos a sumar más manos — cada talonario son 15 números.</div>
+      </div>
+      <svg id="pedir-talonario-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="flex-shrink:0;transition:transform .25s;"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div id="pedir-talonario-body" style="display:none;margin-top:16px;">
+    <p class="talonario-intro">
+      Si quieres apoyar a Paola vendiendo números entre tu gente, <strong>solicita aquí tu(s) talonario(s)</strong>
+      (de 1 a 5). Cada talonario son <strong>15 números consecutivos</strong>. Te descargás el PDF listo para imprimir
+      y vender entre tu gente.
+    </p>
+
+    <div class="disclaimer-box">
+      <div class="disclaimer-title">📋 ¿Cómo funciona? — Léelo antes de descargar</div>
+      <ol class="disclaimer-list">
+        <li>
+          <strong>Descargás tu talonario</strong> con tu nombre, correo y teléfono.
+          Los números son <strong>consecutivos</strong> (ej: si te tocan los talonarios 8, 9 y 10,
+          tus números van del 106 al 150 sin saltos).
+        </li>
+        <li>
+          <strong>Mientras vendés</strong>, tu talonario aparece en la tabla de participantes marcado con
+          <strong>"?"</strong> junto a tu nombre y cantidad de talonarios. Esto deja constancia pública de que
+          estás vendiendo, pero <em>aún no cuenta</em> como número pagado ni en circulación hasta que confirmes.
+        </li>
+        <li>
+          <strong>Cuando termines de vender</strong>, envías a <strong>Denisse.psoto89@gmail.com</strong>:
+          <ol type="a" style="margin:6px 0 0 0;padding-left:22px;">
+            <li>Foto del talonario físico completo (con los nombres escritos).</li>
+            <li>Listado escrito o foto del talonario en PDF con los nombres.</li>
+            <li>Comprobante de transferencia del total.</li>
+          </ol>
+        </li>
+        <li>
+          <strong>Recién ahí</strong> la familia reemplaza los "?" por los <strong>nombres reales</strong>
+          de los compradores y los marca como <strong>pagados</strong>. Solo esos quedan registrados
+          oficialmente en la rifa.
+        </li>
+      </ol>
+      <div class="disclaimer-warn">
+        ⚠️ <strong>Importante:</strong> si descargas un talonario y nunca envías el pago con foto y comprobante,
+        esos números <strong>no cuentan</strong> como talonarios en circulación y la familia los libera.
+        Así aseguramos que solo los pagos confirmados lleguen a la rifa.
+      </div>
+    </div>
+    <form class="talonario-form" id="talonario-form" novalidate>
+      <div>
+        <label for="tal-nombre">Tu nombre</label>
+        <input type="text" id="tal-nombre" name="nombre" placeholder="Ej: María González" required autocomplete="name" maxlength="80">
+      </div>
+      <div>
+        <label for="tal-correo">Tu correo</label>
+        <input type="email" id="tal-correo" name="correo" placeholder="tucorreo@ejemplo.com" required autocomplete="email" maxlength="120">
+      </div>
+      <div>
+        <label for="tal-telefono">Tu teléfono</label>
+        <input type="tel" id="tal-telefono" name="telefono" placeholder="+56 9 1234 5678" required autocomplete="tel" inputmode="tel" maxlength="30">
+      </div>
+      <div>
+        <label for="tal-cantidad">Talonarios (1 a 100)</label>
+        <input type="number" id="tal-cantidad" name="cantidad" min="1" max="100" step="1" value="1" inputmode="numeric" required>
+        <div class="hint" id="tal-hint">1 talonario = 15 números ($15.000)</div>
+      </div>
+      <button type="submit" class="btn-primary" id="tal-submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Solicitar y descargar
+      </button>
+    </form>
+
+    <div class="talonario-steps">
+      <div class="talonario-step">
+        <span class="talonario-step-num">1</span><strong>Completa el formulario</strong><br>
+        Se descargará tu talonario en PDF con tu nombre, los premios y espacios para anotar cada comprador.
+      </div>
+      <div class="talonario-step">
+        <span class="talonario-step-num">2</span><strong>Vende tus 15 números</strong><br>
+        Cada número vale <strong>$1.000</strong>. Anota el nombre de cada comprador en el talonario.
+      </div>
+      <div class="talonario-step">
+        <span class="talonario-step-num">3</span><strong>Envía foto + comprobante</strong><br>
+        Cuando tengas el talonario listo, envía una <strong>foto del talonario completo</strong> y el
+        <strong>comprobante de transferencia</strong> al correo
+        <strong>Denisse.psoto89@gmail.com</strong>. Basta con una foto para registrar los números en el sorteo.
+      </div>
+    </div>
+
+    <p class="talonario-contact">
+      💜 <strong>¿Dudas o cualquier cosa?</strong> Contáctate con <strong>Deny</strong> al correo
+      <strong>Denisse.psoto89@gmail.com</strong> y te ayudamos de inmediato.
+    </p>
+    </div>
+  </section>
+
   <!-- Premios -->
   <section class="card">
     <div class="sec-head">
@@ -789,52 +1204,107 @@
     </div>
   </section>
 
-  <!-- Números -->
+  <!-- Donación de premios -->
+  <section class="card" id="donar-premio">
+    <button type="button" class="sec-head collapsible-toggle" id="donar-premio-toggle" aria-expanded="false" aria-controls="donar-premio-body" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <h2 style="margin:0;">🎁 ¿Quieres aportar con un premio?</h2>
+        <div class="sub">Aún se están recibiendo premios — suma al sorteo algo que haga feliz a alguien.</div>
+      </div>
+      <svg id="donar-premio-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="flex-shrink:0;transition:transform .25s;"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div id="donar-premio-body" style="display:none;margin-top:16px;">
+      <p class="talonario-intro">
+        Puede ser <strong>nuevo o usado en buen estado</strong>, un producto o un servicio (un cuadro, un set de manicure,
+        una clase, un objeto para el hogar, lo que se te ocurra). Déjanos tus datos y
+        <strong>Deny te contacta para coordinar</strong> la entrega y publicar tu premio junto con los demás.
+      </p>
+      <form class="talonario-form" id="premio-form" novalidate>
+        <div>
+          <label for="pr-nombre">Tu nombre</label>
+          <input type="text" id="pr-nombre" name="nombre" placeholder="Ej: María González" required autocomplete="name" maxlength="80">
+        </div>
+        <div>
+          <label for="pr-correo">Tu correo</label>
+          <input type="email" id="pr-correo" name="correo" placeholder="tucorreo@ejemplo.com" required autocomplete="email" maxlength="120">
+        </div>
+        <div>
+          <label for="pr-telefono">Tu teléfono</label>
+          <input type="tel" id="pr-telefono" name="telefono" placeholder="+56 9 1234 5678" required autocomplete="tel" inputmode="tel" maxlength="30">
+        </div>
+        <div class="premio-full">
+          <label for="pr-descripcion">¿Qué te gustaría donar?</label>
+          <textarea id="pr-descripcion" name="descripcion" required maxlength="400" rows="3"
+            placeholder="Ej: Canasta con productos de almacén, una clase de yoga, un set de skincare, un cuadro hecho a mano, una noche de alojamiento…"></textarea>
+          <div class="hint">Máx. 400 caracteres. Incluye valor aproximado si lo sabes — ayuda a ubicarlo en el orden de premios.</div>
+        </div>
+        <button type="submit" class="btn-primary premio-full" id="pr-submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+          Enviar propuesta de premio
+        </button>
+      </form>
+      <p class="talonario-contact">
+        💜 Gracias por querer ayudar. Cada premio suma para Paola.
+      </p>
+    </div>
+  </section>
+
+  <!-- Participantes de la rifa -->
   <section class="card">
     <div class="sec-head">
       <div>
-        <h2>🎫 Números</h2>
-        <div class="sub" id="numeros-sub">Busca tu número o nombre.</div>
+        <h2>🎫 Participantes de la rifa</h2>
+        <div class="sub" id="numeros-sub">Busca tu número o tu nombre y confirma tu pago.</div>
       </div>
+    </div>
+
+    <div class="anti-fraude">
+      <strong>🔒 Verifica tu compra aquí:</strong> si compraste uno o más números, busca tu <strong>nombre</strong>
+      o tu <strong>número</strong> en esta lista. Debes ver <strong>tu nombre, la cantidad de números comprados
+      y el talonario (persona a cargo)</strong>. Si aparece como <em>pagado</em>, la familia ya lo recibió.
+      <br><br>
+      <strong>¿No aparece?</strong> Escríbele directamente a <strong>Deny (Denisse.psoto89@gmail.com)</strong>
+      — nunca pagues si tu nombre no figura acá. Así evitamos estafas.
     </div>
 
     <div class="numeros-head">
-      <div class="ring-wrap">
-        <svg viewBox="0 0 120 120" aria-hidden="true">
-          <defs>
-            <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#7c3aed"/>
-              <stop offset="55%" stop-color="#ec4899"/>
-              <stop offset="100%" stop-color="#f59e0b"/>
-            </linearGradient>
-          </defs>
-          <circle class="ring-bg" cx="60" cy="60" r="52" fill="none" stroke-width="10"/>
-          <circle id="ring" class="ring-fg" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
-        </svg>
-        <div class="ring-label">
-          <div class="big" id="ring-pct">0%</div>
-          <div class="small" id="ring-sub">vendidos</div>
-        </div>
-      </div>
-      <div class="stats" id="stats"></div>
+      <div class="stats" id="stats" style="flex:1;"></div>
+    </div>
+
+    <div id="talonarios-grid" class="talonarios-grid-host">
+      <div class="state"><span class="emoji">⏳</span>Cargando estado de talonarios…</div>
     </div>
 
     <div class="controls">
-      <div class="search">
+      <div class="search" style="flex:1;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <input type="text" id="search" placeholder="Buscar por número o comprador…" autocomplete="off">
-      </div>
-      <div class="segment" id="view-toggle">
-        <button data-view="grid" class="active">🗂 Talonarios</button>
-        <button data-view="table">📋 Tabla</button>
+        <input type="text" id="search" placeholder="Buscar por número o nombre…" autocomplete="off">
       </div>
     </div>
 
-    <div id="grid-view">
-      <div class="state"><span class="emoji">⏳</span>Cargando números…</div>
+    <div id="table-view">
+      <div class="state"><span class="emoji">⏳</span>Cargando participantes…</div>
     </div>
-    <div id="table-view" style="display:none;">
-      <div class="state"><span class="emoji">⏳</span>Cargando números…</div>
+  </section>
+
+  <!-- Fotos de talonarios vendidos -->
+  <section class="card">
+    <div class="sec-head">
+      <div>
+        <h2>📸 Fotos de talonarios vendidos</h2>
+        <div class="sub">Verifica visualmente que tu nombre aparezca en el talonario físico.</div>
+      </div>
+    </div>
+    <div id="fotos-talonarios">
+      <div class="fotos-empty">
+        <div class="fotos-empty-icon">📸</div>
+        <div><strong>Aún no hay fotos subidas.</strong></div>
+        <div class="fotos-empty-sub">
+          Cuando un vendedor envíe la foto del talonario completo + comprobante a
+          <strong>Denisse.psoto89@gmail.com</strong>, la familia la publica acá para que cada comprador
+          pueda confirmar visualmente que su nombre aparece en el papel físico.
+        </div>
+      </div>
     </div>
   </section>
 
@@ -859,6 +1329,21 @@
       </a>
     </div>
     <div id="admin-libres"></div>
+  </section>
+
+  <!-- Admin — Descargas de talonarios -->
+  <section class="card admin-section admin-only">
+    <div class="sec-head">
+      <div>
+        <h2>📥 Descargas de talonarios</h2>
+        <div class="sub">Registro automático de quiénes descargaron un talonario (nombre, correo, teléfono y talonarios a cargo).</div>
+      </div>
+      <button type="button" id="refresh-descargas" style="font-size:13px;color:var(--brand);font-weight:600;text-decoration:none;background:none;border:none;cursor:pointer;padding:0;">Actualizar</button>
+    </div>
+    <div class="stats" id="descargas-stats"></div>
+    <div id="descargas-view">
+      <div class="state"><span class="emoji">⏳</span>Cargando registros…</div>
+    </div>
   </section>
 
   <div class="footer">
