@@ -879,9 +879,9 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     doc.setTextColor(...TEXT);
 
     // ========================================================
-    // Premios: lista completa (full width)
+    // Premios: lista (1 hoja máx — se limita a los primeros MAX_PREMIOS)
     // ========================================================
-    y += topH + 14;
+    y += topH + 12;
     doc.setFont("helvetica", "bold"); doc.setFontSize(11);
     doc.setTextColor(...TEXT);
     doc.text("PREMIOS", ML, y);
@@ -893,46 +893,82 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
 
     doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
     doc.setTextColor(...TEXT);
-    // Todos los premios disponibles en ese momento. Si son muchos, los textos se ajustan.
-    const premiosAListar = Array.isArray(lastPremios) ? lastPremios : [];
-    // Con layout full-width caben ~95 chars por linea a 9.5pt helvetica.
-    const premiosWrap = premiosAListar.length > 7 ? 95 : 100;
-    if (premiosAListar.length) {
-      premiosAListar.forEach((p, i) => {
-        const lugar = fixText(p.lugar || `${i + 1}\u00B0`);
-        const nombrePremio = fixText(p.nombre || p.descripcion || p.premio || "Premio");
-        const desc = p.descripcion && p.nombre ? ` - ${fixText(p.descripcion)}` : "";
-        const linea = `${lugar}  ${nombrePremio}${desc}`;
-        const lineas = wrap(linea, premiosWrap);
-        lineas.forEach((ln, idx) => {
-          if (idx === 0) {
-            doc.setFont("helvetica", "bold");
-            doc.text(lugar, ML + 4, y);
-            doc.setFont("helvetica", "normal");
-            doc.text(ln.substring(lugar.length).trim(), ML + 34, y);
-          } else {
-            doc.text(ln, ML + 34, y);
-          }
-          y += 12;
+    const MAX_PREMIOS = 20;
+    const totalPremios = Array.isArray(lastPremios) ? lastPremios.length : 0;
+    const premiosAListar = (Array.isArray(lastPremios) ? lastPremios : []).slice(0, MAX_PREMIOS);
+    const hayMasDeCap = totalPremios > MAX_PREMIOS;
+    // Normalizamos cada premio a {lugar, texto} y limpiamos puntuación colgante.
+    const premiosNorm = premiosAListar.map((p, i) => {
+      const lugar = fixText(p.lugar || `${i + 1}\u00B0`);
+      let nombrePremio = fixText(p.nombre || p.descripcion || p.premio || "Premio");
+      const tieneDesc = p.descripcion && p.nombre;
+      // Quita ":" colgante al final si no hay descripcion detras.
+      if (!tieneDesc) nombrePremio = nombrePremio.replace(/[:\s-]+$/, "");
+      const desc = tieneDesc ? ` - ${fixText(p.descripcion)}` : "";
+      return { lugar, texto: `${nombrePremio}${desc}` };
+    });
+
+    // Truncado a 1 línea con "…" si supera el ancho — garantiza altura predecible.
+    const truncateToLine = (s, maxChars) => {
+      const lineas = wrap(s, maxChars);
+      if (lineas.length <= 1) return lineas[0] || "";
+      return (lineas[0] || "").slice(0, Math.max(0, maxChars - 1)).trimEnd() + "\u2026";
+    };
+
+    if (premiosNorm.length) {
+      const dosCols = premiosNorm.length > 8;
+      if (dosCols) {
+        // 2 columnas — SIEMPRE 1 línea por premio para caber en una hoja.
+        const lineH = 11;
+        const colGap = 16;
+        const colW = (CW - colGap) / 2;
+        const mitad = Math.ceil(premiosNorm.length / 2);
+        const wrapChars = 46; // ~46 chars a 8.5pt helvetica en colW=258
+        doc.setFontSize(8.5);
+        let yL = y, yR = y;
+        premiosNorm.forEach((p, i) => {
+          const col = i < mitad ? 0 : 1;
+          const xBase = col === 0 ? ML : ML + colW + colGap;
+          const yCol = col === 0 ? yL : yR;
+          doc.setFont("helvetica", "bold");
+          doc.text(p.lugar, xBase + 4, yCol);
+          doc.setFont("helvetica", "normal");
+          doc.text(truncateToLine(p.texto, wrapChars), xBase + 26, yCol);
+          if (col === 0) yL = yCol + lineH; else yR = yCol + lineH;
         });
-      });
+        y = Math.max(yL, yR);
+        doc.setFontSize(9.5);
+      } else {
+        // 1 columna full-width — también 1 línea por premio.
+        const lineH = 12;
+        const wrapChars = 95;
+        premiosNorm.forEach((p) => {
+          doc.setFont("helvetica", "bold");
+          doc.text(p.lugar, ML + 4, y);
+          doc.setFont("helvetica", "normal");
+          doc.text(truncateToLine(p.texto, wrapChars), ML + 34, y);
+          y += lineH;
+        });
+      }
     } else {
       doc.setTextColor(...MUTED);
       doc.text("Los premios se anunciaran pronto en la web de la rifa.", ML + 4, y);
       y += 12;
     }
 
-    // Callout final "¡Y MUCHOS PREMIOS MÁS!" como píldora morada al pie del listado
-    y += 6;
-    const calloutH = 24;
+    // Callout final morado al pie del listado
+    y += 4;
+    const calloutH = 22;
     doc.setFillColor(...PURPLE);
-    doc.roundedRect(ML, y, CW, calloutH, 12, 12, "F");
-    doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+    doc.roundedRect(ML, y, CW, calloutH, 11, 11, "F");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10.5);
     doc.setTextColor(255, 255, 255);
-    doc.text("\u00A1Y MUCHOS PREMIOS M\u00C1S!  \u2022  Lista completa en rifa-paolasoto.vercel.app",
-      ML + CW / 2, y + 15.5, { align: "center" });
+    const calloutMsg = hayMasDeCap
+      ? "\u00A1Y MUCHOS PREMIOS M\u00C1S!  \u2022  Lista completa en rifa-paolasoto.vercel.app"
+      : "Lista completa de premios tambien en rifa-paolasoto.vercel.app";
+    doc.text(calloutMsg, ML + CW / 2, y + 14.5, { align: "center" });
     doc.setTextColor(...TEXT);
-    y += calloutH + 12;
+    y += calloutH + 10;
 
     // ========================================================
     // Tabla de números — SIEMPRE 1 a 15
@@ -945,8 +981,8 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     doc.text("Completa el nombre y telefono de cada comprador", ML + 230, y);
     y += 8;
 
-    // Ajusta altura de fila segun cuantos premios se listaron, para que el pie quepa.
-    const rowH = premiosAListar.length > 6 ? 16 : 18;
+    // Altura uniforme; con 2 columnas de premios la lista queda compacta y el pie siempre cabe.
+    const rowH = 18;
     const colX = [ML, ML + 40, ML + 250, ML + 450];
     const colW = [40, 210, 200, CW - 450];
 
@@ -983,8 +1019,8 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     }
 
     // Transferencia + instrucciones en 2 columnas
-    y += 10;
-    const boxH = 82;
+    y += 8;
+    const boxH = 78;
     const colBoxW = (CW - 12) / 2;
 
     // Columna 1: datos de transferencia
@@ -1022,40 +1058,35 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     doc.setFont("helvetica", "normal"); doc.setFontSize(8.5);
     doc.setTextColor(...TEXT);
     const instrucciones = [
-      "Envia una FOTO del talonario completo",
-      "+ comprobante de transferencia a:",
-      "Denisse.psoto89@gmail.com",
-      "",
-      "Cada comprador puede verificar su",
-      "nombre en la web de la rifa.",
+      "Envia FOTO del talonario completo +",
+      "comprobante a Denisse.psoto89@gmail.com",
+      "Cada comprador verifica en la web:",
+      "su nombre/numero debe aparecer pagado.",
     ];
     let iy = y + 32;
     instrucciones.forEach((ln) => {
       doc.text(ln, c2x + 10, iy);
-      iy += 11;
+      iy += 12;
     });
 
-    y += boxH + 10;
+    y += boxH + 8;
 
     // Aviso anti-fraude
     doc.setFont("helvetica", "bold"); doc.setFontSize(9);
     doc.setTextColor(...PURPLE);
     doc.text("VERIFICACION ANTI-FRAUDE", PW / 2, y, { align: "center" });
-    y += 11;
+    y += 10;
     doc.setFont("helvetica", "normal"); doc.setFontSize(8.5);
     doc.setTextColor(...TEXT);
     doc.text("Cada comprador puede confirmar su pago en la web: buscando su nombre o numero en la", PW / 2, y, { align: "center" });
     y += 10;
     doc.text("lista de participantes debe aparecer pagado y a cargo de " + fixText(nombre) + ".", PW / 2, y, { align: "center" });
-    y += 14;
+    y += 12;
 
     // Footer contacto
     doc.setFont("helvetica", "bold"); doc.setFontSize(9);
     doc.setTextColor(...MUTED);
-    doc.text("Dudas: Deny - Denisse.psoto89@gmail.com", PW / 2, y, { align: "center" });
-    y += 11;
-    doc.setTextColor(...PURPLE);
-    doc.text("WhatsApp: +56 9 4596 1962", PW / 2, y, { align: "center" });
+    doc.text("Dudas: Deny - Denisse.psoto89@gmail.com   \u2022   WhatsApp: +56 9 4596 1962", PW / 2, y, { align: "center" });
   }
 
   const safeNombre = nombre.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s-]/g, "").trim().replace(/\s+/g, "_");
