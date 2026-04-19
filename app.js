@@ -823,7 +823,9 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     doc.setFont("helvetica", "bold"); doc.setFontSize(22);
     doc.text("RIFA PAOLA SOTO", ML, 34);
     doc.setFont("helvetica", "normal"); doc.setFontSize(10.5);
-    doc.text("Por su recuperacion - gracias por apoyarla", ML, 54);
+    doc.text("Por su recuperacion - gracias por apoyarla", ML, 52);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5);
+    doc.text("Web oficial: rifa-paolasoto.vercel.app", ML, 68);
     doc.setFont("helvetica", "bold"); doc.setFontSize(15);
     doc.text(`Talonario ${fixText(codigo)}`, PW - MR, 34, { align: "right" });
     doc.setFont("helvetica", "bold"); doc.setFontSize(10);
@@ -900,7 +902,7 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     const PURPLE_DARK = [76, 29, 149];  // violet-800 — imprime ~gris oscuro
     const premiosEndY = y;
     const pBoxTop = premiosStartY - 4;
-    const pBoxH = Math.max(premiosEndY - pBoxTop, 158);
+    const pBoxH = Math.max(premiosEndY - pBoxTop, 140);
     // Caja principal — violeta oscuro (alto contraste B&W)
     doc.setFillColor(...PURPLE_DARK);
     doc.roundedRect(rightColX, pBoxTop, rightColW, pBoxH, 10, 10, "F");
@@ -932,8 +934,9 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     doc.text("rifa-paolasoto.vercel.app", rightColX + rightColW / 2, pBoxTop + pBoxH - 5, { align: "center" });
     doc.setTextColor(...TEXT);
 
-    // Tabla de números — SIEMPRE 1 a 15
-    y += 8;
+    // Tabla de números — SIEMPRE 1 a 15. Fuerza y por debajo de la caja morada
+    // para evitar que la tabla se sobreponga con la caja "¡Y MUCHOS PREMIOS MÁS!".
+    y = Math.max(y, pBoxTop + pBoxH) + 14;
     doc.setFont("helvetica", "bold"); doc.setFontSize(11);
     doc.setTextColor(...TEXT);
     doc.text(`TUS NUMEROS (01 al ${String(N).padStart(2, "0")})`, ML, y);
@@ -942,7 +945,7 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     doc.text("Completa el nombre y telefono de cada comprador", ML + 230, y);
     y += 8;
 
-    const rowH = 20;
+    const rowH = 18;
     const colX = [ML, ML + 40, ML + 250, ML + 450];
     const colW = [40, 210, 200, CW - 450];
 
@@ -979,8 +982,8 @@ function buildTalonarioPDF({ nombre, correo, telefono, cantidad, codigos }) {
     }
 
     // Transferencia + instrucciones en 2 columnas
-    y += 12;
-    const boxH = 90;
+    y += 10;
+    const boxH = 82;
     const colBoxW = (CW - 12) / 2;
 
     // Columna 1: datos de transferencia
