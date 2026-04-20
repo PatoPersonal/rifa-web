@@ -433,8 +433,6 @@ function renderNumeros(list) {
   const freeCount = Math.max(0, totalRegistrados - paidCount - reservedCount);
   lastRifasCount = talCodes.length;
 
-  const totalVisible = paidCount + reservedCount + freeCount;
-  const pctVendido = totalVisible > 0 ? Math.round(((paidCount + reservedCount) / totalVisible) * 100) : 0;
   document.getElementById("stats").innerHTML = `
     <div class="stat stat-paid">
       <div class="stat-num">${paidCount}</div>
@@ -454,7 +452,6 @@ function renderNumeros(list) {
     <a class="stat cta-stat" href="#pedir-talonario">
       <div class="stat-num">💜</div>
       <div class="stat-label">Pide tu talonario o compra un número</div>
-      <div class="cta-sub">${pctVendido}% ya aporta a Paola</div>
     </a>
   `;
 
