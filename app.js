@@ -3,7 +3,7 @@
    ============================================================ */
 const CONFIG = {
   titulo: "Gran Rifa",
-  subtitulo: "Rifa 100% benéfica — cada peso va directo a la recuperación de Paola. Transparente y actualizada en vivo.",
+  subtitulo: "Rifa 100% benéfica — actualizada en vivo.",
 
   // ID de la Google Sheet (entre /d/ y /edit en la URL)
   sheetId: "1vLJyh4aALhtmrYLhXpPcTvuamV8VLMzZtsoIgH0xH5E",
