@@ -445,9 +445,9 @@ function renderNumeros(list) {
       <div class="stat-sub">⏳ en espera de pago</div>
     </div>
     <div class="stat stat-free">
-      <div class="stat-num">${freeCount}</div>
+      <div class="stat-num">✅</div>
       <div class="stat-label">Disponibles</div>
-      <div class="stat-sub">🎟️ aún puedes comprarlos</div>
+      <div class="stat-sub">Aún quedan números — se suman talonarios a medida que crece la demanda</div>
     </div>
     <a class="stat cta-stat" href="#pedir-talonario">
       <div class="stat-num">💜</div>
