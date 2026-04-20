@@ -322,7 +322,7 @@ function renderFotosTalonarios(rows) {
       talonario: (r.talonario || r.rifa || r.n || "").toString().trim(),
       fecha:     (r.fecha || r.timestamp || "").trim(),
     }))
-    .filter(r => /^https?:\/\//i.test(r.url));
+    .filter(r => /^(https?:\/\/|\/)/i.test(r.url));
 
   if (!list.length) return; // deja el estado vacío que ya está en el HTML
 
