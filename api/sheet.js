@@ -1,8 +1,44 @@
-// Proxy serverless para leer pestañas del Google Sheet como CSV.
-// Evita el problema de CORS al llamar a docs.google.com/export desde el navegador
-// Y evita la inferencia de tipos de gviz (que descarta texto en columnas numéricas).
+// Proxy serverless para leer pestañas del Google Sheet.
+// Usa Sheets API con Service Account (igual que las escrituras en _lib.js) en
+// vez de /export?format=csv — el endpoint público se sirve desde una CDN que
+// cachea por minutos/horas y provocaba que filas nuevas no aparecieran en la
+// web (ver caso 2026-04-20, filas 592+ de Numeros invisibles).
+// Devuelve CSV para no tocar el parser del frontend (_parseCsv en app.js).
 
-const ALLOWED_GIDS = new Set(["1574989954"]); // Numeros (agregar más si corresponde)
+import { GoogleAuth } from "google-auth-library";
+
+// gid → nombre EXACTO de la pestaña en el Sheet.
+const ALLOWED_SHEETS = {
+  "1574989954": "Numeros",
+};
+
+let _authClient = null;
+async function getAccessToken() {
+  if (!_authClient) {
+    const raw = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+    let creds;
+    try { creds = JSON.parse(raw); }
+    catch { throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY no es JSON válido"); }
+    const auth = new GoogleAuth({
+      credentials: creds,
+      scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+    });
+    _authClient = await auth.getClient();
+  }
+  const t = await _authClient.getAccessToken();
+  return typeof t === "string" ? t : (t && t.token) || null;
+}
+
+function toCsv(rows) {
+  if (!Array.isArray(rows)) return "";
+  return rows.map((r) => (r || []).map(csvCell).join(",")).join("\n");
+}
+
+function csvCell(v) {
+  const s = v == null ? "" : String(v);
+  if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
 
 export default async function handler(req, res) {
   const SHEET_ID = (process.env.SHEET_ID || "").trim();
@@ -16,23 +52,28 @@ export default async function handler(req, res) {
     res.status(400).json({ error: "gid requerido" });
     return;
   }
-  if (!ALLOWED_GIDS.has(gid)) {
+  const sheetName = ALLOWED_SHEETS[gid];
+  if (!sheetName) {
     res.status(403).json({ error: "gid no permitido" });
     return;
   }
 
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
-
   try {
-    const upstream = await fetch(url, { redirect: "follow" });
+    const token = await getAccessToken();
+    if (!token) throw new Error("no_access_token");
+    const range = encodeURIComponent(sheetName);
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?valueRenderOption=FORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING&majorDimension=ROWS`;
+    const upstream = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (!upstream.ok) {
-      res.status(upstream.status).json({ error: `upstream ${upstream.status}` });
+      const txt = await upstream.text().catch(() => "");
+      res.status(upstream.status).json({ error: `upstream ${upstream.status}`, detail: txt.slice(0, 200) });
       return;
     }
-    const text = await upstream.text();
+    const data = await upstream.json();
+    const csv = toCsv(data.values || []);
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Cache-Control", "no-store, max-age=0, must-revalidate");
-    res.status(200).send(text);
+    res.status(200).send(csv);
   } catch (e) {
     res.status(500).json({ error: String(e && e.message ? e.message : e) });
   }
