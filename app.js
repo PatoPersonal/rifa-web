@@ -3,7 +3,7 @@
    ============================================================ */
 const CONFIG = {
   titulo: "Gran Rifa",
-  subtitulo: "Números pagados, premios y toda la info del sorteo — actualizado en vivo.",
+  subtitulo: "Rifa 100% benéfica — cada peso va directo a la recuperación de Paola. Transparente y actualizada en vivo.",
 
   // ID de la Google Sheet (entre /d/ y /edit en la URL)
   sheetId: "1vLJyh4aALhtmrYLhXpPcTvuamV8VLMzZtsoIgH0xH5E",
@@ -433,11 +433,28 @@ function renderNumeros(list) {
   const freeCount = Math.max(0, totalRegistrados - paidCount - reservedCount);
   lastRifasCount = talCodes.length;
 
+  const totalVisible = paidCount + reservedCount + freeCount;
+  const pctVendido = totalVisible > 0 ? Math.round(((paidCount + reservedCount) / totalVisible) * 100) : 0;
   document.getElementById("stats").innerHTML = `
+    <div class="stat stat-paid">
+      <div class="stat-num">${paidCount}</div>
+      <div class="stat-label">Pagados</div>
+      <div class="stat-sub">💚 comprobante recibido</div>
+    </div>
+    <div class="stat stat-reserved">
+      <div class="stat-num">${reservedCount}</div>
+      <div class="stat-label">Reservados</div>
+      <div class="stat-sub">⏳ en espera de pago</div>
+    </div>
+    <div class="stat stat-free">
+      <div class="stat-num">${freeCount}</div>
+      <div class="stat-label">Disponibles</div>
+      <div class="stat-sub">🎟️ aún puedes comprarlos</div>
+    </div>
     <a class="stat cta-stat" href="#pedir-talonario">
       <div class="stat-num">💜</div>
       <div class="stat-label">Pide tu talonario o compra un número</div>
-      <div class="cta-sub">¡Cada aporte suma para Paola!</div>
+      <div class="cta-sub">${pctVendido}% ya aporta a Paola</div>
     </a>
   `;
 
