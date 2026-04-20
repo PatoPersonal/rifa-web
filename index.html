@@ -52,20 +52,17 @@
   [data-theme="dark"] .stat,
   [data-theme="dark"] .rifa-block,
   [data-theme="dark"] .transfer-data,
-  [data-theme="dark"] .fondos-list li,
   [data-theme="dark"] .premio,
   [data-theme="dark"] .num-cell,
   [data-theme="dark"] .foto-item {
     background-color: #15152a;
   }
   [data-theme="dark"] .announcement-body p,
-  [data-theme="dark"] .fondos-intro,
   [data-theme="dark"] .transfer-note,
   [data-theme="dark"] .talonario-intro,
   [data-theme="dark"] .talonario-contact,
   [data-theme="dark"] .disclaimer-box,
-  [data-theme="dark"] .anti-fraude,
-  [data-theme="dark"] .fondos-footer {
+  [data-theme="dark"] .anti-fraude {
     color: #e2e8f0;
   }
   [data-theme="dark"] .talonario-step { color: #e2e8f0; }
@@ -74,7 +71,6 @@
   [data-theme="dark"] .transfer-data li span { color: #b8c4d6; }
   [data-theme="dark"] .sec-head .sub { color: #b8c4d6; }
   [data-theme="dark"] .gallery-subtitle { color: #b8c4d6; }
-  [data-theme="dark"] .fondos-list li > div { color: #cbd5e1; }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
@@ -164,69 +160,6 @@
     background: linear-gradient(180deg, transparent, rgba(0,0,0,.7));
     color: #fff; font-weight: 700; font-size: 16px; letter-spacing: -.01em;
   }
-  /* ───── Destino de fondos ───── */
-  .fondos-card {
-    background: linear-gradient(180deg, rgba(124,58,237,0.06), transparent 70%), var(--card);
-    border-color: rgba(124,58,237,0.28);
-  }
-  .fondos-intro {
-    margin: 0 0 16px; font-size: 14.5px; line-height: 1.65; color: var(--text);
-  }
-  .fondos-intro strong { color: var(--brand); }
-  .fondos-list {
-    list-style: none; margin: 0 0 16px; padding: 0;
-    display: grid; gap: 12px;
-  }
-  .fondos-list li {
-    display: grid; grid-template-columns: 44px 1fr; gap: 14px;
-    padding: 14px 16px;
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    transition: border-color .2s, transform .15s;
-  }
-  .fondos-list li:hover { border-color: var(--brand); transform: translateX(2px); }
-  .fondos-icon {
-    width: 44px; height: 44px;
-    display: grid; place-items: center;
-    border-radius: 12px;
-    background: var(--gradient);
-    font-size: 22px;
-    color: #fff;
-    flex-shrink: 0;
-  }
-  .fondos-list li > div {
-    display: flex; flex-direction: column; gap: 4px;
-    min-width: 0;
-  }
-  .fondos-list li strong {
-    font-size: 15px; color: var(--text); font-weight: 700; letter-spacing: -.01em;
-  }
-  .fondos-list li em {
-    font-style: normal; color: var(--brand); font-weight: 600;
-  }
-  .fondos-list li > div {
-    font-size: 13.5px; color: var(--muted); line-height: 1.55;
-  }
-  .fondos-footer {
-    margin: 0; padding: 14px 16px;
-    background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(236,72,153,0.06));
-    border: 1px solid rgba(124,58,237,0.25);
-    border-left: 4px solid var(--brand);
-    border-radius: 12px;
-    font-size: 13.5px; line-height: 1.6; color: var(--text);
-  }
-  .fondos-footer strong { color: var(--brand); }
-  [data-theme="dark"] .fondos-list li em { color: #c4b5fd; }
-  [data-theme="dark"] .fondos-footer strong { color: #c4b5fd; }
-  @media (max-width: 620px) {
-    .fondos-list li { grid-template-columns: 38px 1fr; gap: 12px; padding: 12px 14px; }
-    .fondos-icon { width: 38px; height: 38px; font-size: 18px; }
-    .fondos-list li strong { font-size: 14.5px; }
-    .fondos-list li > div { font-size: 13px; }
-    .fondos-intro { font-size: 14px; }
-  }
-
   /* Aviso principal bajo el hero */
   .announcement-card {
     border-color: rgba(236,72,153,.28);
@@ -1309,7 +1242,7 @@
       </div>
     </div>
     <div class="announcement-body">
-      <p>💜 Esta es una <strong>rifa 100% benéfica</strong>: <strong>cada peso recaudado va directo a la recuperación de la Maretita</strong>. Ni un solo peso se queda en el camino. <a href="#destino-fondos" class="announcement-link">Mira acá en qué se usarán los fondos</a>.</p>
+      <p>💜 Esta es una <strong>rifa 100% benéfica</strong>: cada peso recaudado va directo a la recuperación de la Maretita.</p>
       <p>✨ Cada premio de esta rifa nació del <strong>cariño de la familia</strong>. Tíos, primos, hermanos y amigos del alma se pusieron la mano en el corazón y donaron cosas preciosas para apoyar a la <strong>Maretita</strong>. Nos emociona cada aporte nuevo que se suma. 💜</p>
       <p>Si tienes una <strong>pyme o emprendimiento en Concepción</strong>, este es tu momento de sumarte. Un servicio, un producto, una experiencia — lo que tengas para regalar, suma muchísimo. <a href="#donar-premio" class="announcement-link">Escríbenos por aquí</a> y tu emprendimiento quedará con nombre y apellido en la descripción del premio que donaste.</p>
       <p>🫶 A toda la familia, primos, tíos, amigos y cercanos que están moviendo talonarios en sus redes: <strong>ustedes son el motor de todo esto</strong>. Con cada talonario que venden se hace más cercano el día en que la Maretita pueda seguir tranquila con sus tratamientos y cuidados. Gracias por estar.</p>
@@ -1387,58 +1320,6 @@
         </div>
       </div>
     </details>
-  </section>
-
-  <!-- ¿En qué se usarán los fondos? -->
-  <section class="card fondos-card" id="destino-fondos">
-    <div class="sec-head">
-      <div>
-        <h2>💜 ¿En qué se usarán los fondos?</h2>
-        <div class="sub">Rifa 100% benéfica — todo lo recaudado va directo a Paola.</div>
-      </div>
-    </div>
-    <p class="fondos-intro">
-      Cada peso que entra por esta rifa se destina <strong>íntegramente</strong> a que la Maretita pueda
-      seguir recuperándose con tranquilidad. Estas son las prioridades concretas que la familia decidió
-      cubrir con lo recaudado:
-    </p>
-    <ul class="fondos-list">
-      <li>
-        <span class="fondos-icon" aria-hidden="true">🏠</span>
-        <div>
-          <strong>Adaptar la casa a su nueva movilidad</strong>
-          Habilitar la <em>pieza</em> y el <em>baño</em> con apoyos, barras y accesos seguros pensando en
-          sus cuidados actuales.
-        </div>
-      </li>
-      <li>
-        <span class="fondos-icon" aria-hidden="true">🩺</span>
-        <div>
-          <strong>Terapias y rehabilitación</strong>
-          Kinesiología, fonoaudiología, terapia ocupacional y todo lo que necesite para seguir avanzando
-          en su recuperación.
-        </div>
-      </li>
-      <li>
-        <span class="fondos-icon" aria-hidden="true">🦽</span>
-        <div>
-          <strong>Insumos y ayudas técnicas</strong>
-          Silla de ruedas, andador, cama clínica, medicamentos y todo lo que facilite su día a día con
-          menor movilidad.
-        </div>
-      </li>
-      <li>
-        <span class="fondos-icon" aria-hidden="true">💝</span>
-        <div>
-          <strong>Cuidados diarios</strong>
-          Transporte a controles médicos, alimentación especial y apoyo profesional continuo en casa.
-        </div>
-      </li>
-    </ul>
-    <p class="fondos-footer">
-      📢 <strong>Transparencia total:</strong> publicaremos actualizaciones regulares acá mismo para
-      que cada persona que aportó vea <strong>en qué se gastó cada peso</strong>. Gracias por confiar. 💜
-    </p>
   </section>
 
   <!-- Cómo participar / Transferencia -->
