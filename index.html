@@ -1199,6 +1199,107 @@
       display: none;
     }
   }
+
+  /* ───── Lightbox / carrusel galería ───── */
+  .lightbox {
+    position: fixed; inset: 0;
+    background: rgba(8, 6, 18, 0.92);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 1000;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    transition: opacity .18s ease;
+  }
+  .lightbox.is-open { display: flex; opacity: 1; }
+  .lightbox-figure {
+    margin: 0;
+    max-width: min(1100px, 100%);
+    max-height: 100%;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    pointer-events: none;
+  }
+  .lightbox-img {
+    max-width: 100%;
+    max-height: calc(100vh - 120px);
+    border-radius: 12px;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,.7);
+    background: #111;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: auto;
+    touch-action: pan-y;
+  }
+  .lightbox-caption {
+    color: #f1edff;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0,0,0,.6);
+    max-width: 90%;
+    pointer-events: none;
+  }
+  .lightbox-counter {
+    position: absolute;
+    top: 18px; left: 22px;
+    color: #f1edff;
+    font-size: 13px;
+    font-weight: 600;
+    background: rgba(0,0,0,.45);
+    padding: 6px 12px;
+    border-radius: 999px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .lightbox-btn {
+    position: absolute;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,.12);
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background .15s, transform .15s;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .lightbox-btn:hover { background: rgba(255,255,255,.22); transform: scale(1.05); }
+  .lightbox-btn:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
+  .lightbox-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+  .lightbox-close { top: 16px; right: 18px; }
+  .lightbox-prev { left: 18px; top: 50%; transform: translateY(-50%); }
+  .lightbox-next { right: 18px; top: 50%; transform: translateY(-50%); }
+  .lightbox-prev:hover { transform: translateY(-50%) scale(1.05); }
+  .lightbox-next:hover { transform: translateY(-50%) scale(1.05); }
+  .lightbox-prev svg, .lightbox-next svg, .lightbox-close svg {
+    width: 22px; height: 22px;
+  }
+  .lightbox-zoomhint {
+    color: rgba(241,237,255,.55);
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+  .gallery-item { cursor: zoom-in; }
+  body.lightbox-open { overflow: hidden; }
+
+  @media (max-width: 640px) {
+    .lightbox { padding: 12px; }
+    .lightbox-btn { width: 42px; height: 42px; font-size: 18px; }
+    .lightbox-prev { left: 8px; }
+    .lightbox-next { right: 8px; }
+    .lightbox-close { top: 10px; right: 10px; }
+    .lightbox-counter { top: 12px; left: 12px; font-size: 12px; padding: 5px 10px; }
+    .lightbox-img { max-height: calc(100vh - 90px); }
+    .lightbox-caption { font-size: 13px; }
+  }
 </style>
 </head>
 <body>
@@ -1666,6 +1767,119 @@
     <button type="button" class="info-modal-ok" id="info-modal-ok">Entendido</button>
   </div>
 </div>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Galería de fotos" aria-hidden="true">
+  <span class="lightbox-counter" id="lightbox-counter">1 / 1</span>
+  <button type="button" class="lightbox-btn lightbox-close" id="lightbox-close" aria-label="Cerrar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+  </button>
+  <button type="button" class="lightbox-btn lightbox-prev" id="lightbox-prev" aria-label="Foto anterior">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+  </button>
+  <button type="button" class="lightbox-btn lightbox-next" id="lightbox-next" aria-label="Foto siguiente">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+  </button>
+  <figure class="lightbox-figure">
+    <img class="lightbox-img" id="lightbox-img" alt="">
+    <figcaption class="lightbox-caption" id="lightbox-caption"></figcaption>
+  </figure>
+</div>
+
+<script>
+(function(){
+  const lb = document.getElementById('lightbox');
+  if (!lb) return;
+  const imgEl = document.getElementById('lightbox-img');
+  const captionEl = document.getElementById('lightbox-caption');
+  const counterEl = document.getElementById('lightbox-counter');
+  const btnClose = document.getElementById('lightbox-close');
+  const btnPrev = document.getElementById('lightbox-prev');
+  const btnNext = document.getElementById('lightbox-next');
+
+  let current = [];
+  let idx = 0;
+  let lastFocus = null;
+
+  function show(i){
+    if (!current.length) return;
+    idx = (i + current.length) % current.length;
+    const item = current[idx];
+    imgEl.src = item.src;
+    imgEl.alt = item.alt || '';
+    captionEl.textContent = item.alt || '';
+    captionEl.style.display = item.alt ? '' : 'none';
+    counterEl.textContent = (idx + 1) + ' / ' + current.length;
+    const single = current.length <= 1;
+    btnPrev.disabled = single;
+    btnNext.disabled = single;
+    btnPrev.style.display = single ? 'none' : '';
+    btnNext.style.display = single ? 'none' : '';
+  }
+  function open(items, i){
+    current = items;
+    lastFocus = document.activeElement;
+    lb.classList.add('is-open');
+    lb.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('lightbox-open');
+    show(i);
+    btnClose.focus();
+  }
+  function close(){
+    lb.classList.remove('is-open');
+    lb.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('lightbox-open');
+    imgEl.src = '';
+    if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+  }
+  function next(){ show(idx + 1); }
+  function prev(){ show(idx - 1); }
+
+  document.querySelectorAll('.gallery-grid').forEach(grid => {
+    const links = Array.from(grid.querySelectorAll('a.gallery-item'));
+    if (!links.length) return;
+    const items = links.map(a => {
+      const img = a.querySelector('img');
+      return { src: a.getAttribute('href'), alt: img ? img.getAttribute('alt') : '' };
+    });
+    links.forEach((a, i) => {
+      a.addEventListener('click', e => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+        e.preventDefault();
+        open(items, i);
+      });
+    });
+  });
+
+  btnClose.addEventListener('click', close);
+  btnPrev.addEventListener('click', prev);
+  btnNext.addEventListener('click', next);
+  lb.addEventListener('click', e => { if (e.target === lb) close(); });
+
+  document.addEventListener('keydown', e => {
+    if (!lb.classList.contains('is-open')) return;
+    if (e.key === 'Escape') { e.preventDefault(); close(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+  });
+
+  let touchX = null, touchY = null;
+  imgEl.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    touchX = e.touches[0].clientX;
+    touchY = e.touches[0].clientY;
+  }, { passive: true });
+  imgEl.addEventListener('touchend', e => {
+    if (touchX == null) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchX;
+    const dy = t.clientY - touchY;
+    touchX = touchY = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) next(); else prev();
+    }
+  }, { passive: true });
+})();
+</script>
 
 <script src="app.js" defer></script>
 </body>
